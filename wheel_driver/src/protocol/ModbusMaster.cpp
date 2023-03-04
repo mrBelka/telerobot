@@ -14,13 +14,13 @@ namespace robot::protocol
         m_sc->Open();
     }
 
-    uint16_t ModbusMaster::ReadAnalogInput(uint8_t addr, uint16_t reg)
+    int16_t ModbusMaster::ReadAnalogInput(uint8_t addr, uint16_t reg)
     {
-        std::vector<uint16_t> data = ReadAnalogInput(addr, reg, 1);
+        std::vector<int16_t> data = ReadAnalogInput(addr, reg, 1);
         return data[0];
     }
 
-    std::vector<uint16_t> ModbusMaster::ReadAnalogInput(uint8_t addr, uint16_t reg, uint16_t count)
+    std::vector<int16_t> ModbusMaster::ReadAnalogInput(uint8_t addr, uint16_t reg, uint16_t count)
     {
         static int step = 0;
         reg -= 1;
@@ -37,7 +37,7 @@ namespace robot::protocol
             printf("%02hhX ", buf[i]);
         printf("\n");
 
-        std::vector<uint16_t> result;
+        std::vector<int16_t> result;
         if (step < 5) {
             step++;
             result.resize(4);

@@ -143,20 +143,20 @@ void loop() {
 
   // Get data
   long LFpos = motorLF->getEncoderPosition();
-  regBank.set(30001, (word) (LFpos / 65536) );
-  regBank.set(30002, (word) (LFpos % 65536) );
+  regBank.set(30001, (word) (LFpos / 32768) );
+  regBank.set(30002, (word) (LFpos % 32768) );
   
   long RFpos = motorRF->getEncoderPosition();
-  regBank.set(30003, (word) (RFpos / 65536) );
-  regBank.set(30004, (word) (RFpos % 65536) );
+  regBank.set(30003, (word) (RFpos / 32768) );
+  regBank.set(30004, (word) (RFpos % 32768) );
   
   long LRpos = motorLR->getEncoderPosition();
-  regBank.set(30005, (word) (LRpos / 65536) );
-  regBank.set(30006, (word) (LRpos % 65536) );
+  regBank.set(30005, (word) (LRpos / 32768) );
+  regBank.set(30006, (word) (LRpos % 32768) );
   
   long RRpos = motorRR->getEncoderPosition();
-  regBank.set(30007, (word) (RRpos / 65536) );
-  regBank.set(30008, (word) (RRpos % 65536) );
+  regBank.set(30007, (word) (RRpos / 32768) );
+  regBank.set(30008, (word) (RRpos % 32768) );
 
   // Set data
   motorLF->speed(regBank.get(40001) - 255);

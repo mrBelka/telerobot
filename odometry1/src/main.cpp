@@ -9,6 +9,10 @@
 #include "std_msgs/msg/string.hpp"
 #include "telerobot_interfaces/msg/motor.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 
 #define TICK_TO_RAD 0.00253354246
@@ -27,10 +31,12 @@ class Odometry : public rclcpp::Node
 
         m_last_time = this->now();
 
-        odom_class = std::make_unique<OdometryClass>(4, 10, 10);
+        odom_class = std::make_unique<OdometryClass>(0.04, 0.125, 0.11);
         m_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("wheel_commands", 10);
         m_odom_commands_sub = this->create_subscription<geometry_msgs::msg::Twist>(
                 "cmd_vel", 10, std::bind(&Odometry::odom_commands, this, _1));
+        m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+        m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
     }
 
   private:
@@ -39,8 +45,8 @@ class Odometry : public rclcpp::Node
     {
         rclcpp::Time now = this->now();
         double motor_lf_position = TICK_TO_RAD * encodes_msg.motor_lf;
-        double motor_rf_position = TICK_TO_RAD * encodes_msg.motor_lr;
-        double motor_lr_position = TICK_TO_RAD * encodes_msg.motor_rf;
+        double motor_rf_position = TICK_TO_RAD * encodes_msg.motor_rf;
+        double motor_lr_position = TICK_TO_RAD * encodes_msg.motor_lr;
         double motor_rr_position = TICK_TO_RAD * encodes_msg.motor_rr;
 
         // Joint states block
@@ -97,6 +103,51 @@ class Odometry : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "%f", odom_class->posy);
         RCLCPP_INFO(this->get_logger(), "%f", odom_class->rot);
 
+        m_robot_pos[0] = odom_class->posx;
+        m_robot_pos[1] = odom_class->posy;
+        m_robot_pos[2] = odom_class->rot;
+
+        m_robot_vel[0] = odom_class->mv_after_update.VX;
+        m_robot_vel[1] = odom_class->mv_after_update.VY;
+        m_robot_vel[2] = odom_class->mv_after_update.WZ;
+
+        // Odom publishing
+        auto odom_msg = std::make_unique<nav_msgs::msg::Odometry>();
+
+        odom_msg->header.frame_id = "odom";
+        odom_msg->child_frame_id = "base_footprint";
+        odom_msg->header.stamp = now;
+
+        odom_msg->pose.pose.position.x = m_robot_pos[0];
+        odom_msg->pose.pose.position.y = m_robot_pos[1];
+        odom_msg->pose.pose.position.z = 0;
+
+        tf2::Quaternion q;
+        q.setRPY(0.0, 0.0, m_robot_pos[2]);
+
+        odom_msg->pose.pose.orientation.x = q.x();
+        odom_msg->pose.pose.orientation.y = q.y();
+        odom_msg->pose.pose.orientation.z = q.z();
+        odom_msg->pose.pose.orientation.w = q.w();
+
+        odom_msg->twist.twist.linear.x = m_robot_vel[0];
+        odom_msg->twist.twist.linear.y = m_robot_vel[1];
+        odom_msg->twist.twist.angular.z = m_robot_vel[2];
+
+        geometry_msgs::msg::TransformStamped odom_tf;
+
+        odom_tf.transform.translation.x = odom_msg->pose.pose.position.x;
+        odom_tf.transform.translation.y = odom_msg->pose.pose.position.y;
+        odom_tf.transform.translation.z = odom_msg->pose.pose.position.z;
+        odom_tf.transform.rotation = odom_msg->pose.pose.orientation;
+
+        odom_tf.header.frame_id = "odom";
+        odom_tf.child_frame_id = "base_footprint";
+        odom_tf.header.stamp = now;
+
+        m_odom_pub->publish(std::move(odom_msg));
+
+        m_tf_broadcaster->sendTransform(odom_tf);
 
         m_last_time = this->now();
 
@@ -134,10 +185,15 @@ class Odometry : public rclcpp::Node
     double m_last_joint_positions[4] = {0};
     bool m_first = true;
 
+    double m_robot_pos[3] = {0,0,0};
+    double m_robot_vel[3] = {0,0,0};
+
     rclcpp::Time m_last_time;
     std::unique_ptr<OdometryClass> odom_class;
     rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_pub;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr m_odom_commands_sub;
+    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
 };
 
 int main(int argc, char * argv[])

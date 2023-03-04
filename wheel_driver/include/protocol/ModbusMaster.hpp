@@ -18,8 +18,8 @@ namespace robot::protocol
     public:
         ModbusMaster(const std::string& port, size_t baudrate);
         void Setup();
-        uint16_t ReadAnalogInput(uint8_t addr, uint16_t reg);
-        std::vector<uint16_t> ReadAnalogInput(uint8_t addr, uint16_t reg, uint16_t count);
+        int16_t ReadAnalogInput(uint8_t addr, uint16_t reg);
+        std::vector<int16_t> ReadAnalogInput(uint8_t addr, uint16_t reg, uint16_t count);
         bool WriteSingleAnalogOutput(uint8_t addr, uint16_t reg, uint16_t value);
         bool WriteMultiAnalogOutput(uint8_t addr, uint16_t reg, const std::vector<uint16_t>& values);
 

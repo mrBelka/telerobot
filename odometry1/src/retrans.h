@@ -23,27 +23,30 @@ struct INVERSE_DATA {
 
 
 struct OdometryClass {
-	double r, lx, ly, rot;
+	double r, lx, ly;
 	double trans_matrix[3][3];
 	double vector[2];
-	double posx = 0.0, posy = 0.0;
+	double posx = 0.0, posy = 0.0, rot = 0;
+	INVERSE_DATA mv_after_update;
 	OdometryClass(
 		double r,
 		double lx,
-		double ly,
-		double rot = 90.0
-		): r(r), lx(lx), ly(ly), rot(rot) {}
+		double ly
+		): r(r), lx(lx), ly(ly) {}
 
 	void Update(double dt, FORWARD_DATA data) {
-		INVERSE_DATA mv = GetOdometryFORW(data);
+		std::cout << data.WFL << " " << data.WFR << " " << data.WRL << " " << data.WRR << std::endl;
+		mv_after_update = GetOdometryFORW(data);
+		INVERSE_DATA& mv = mv_after_update;
 
 		std::cout << mv.VX << " " << mv.VY << " " << mv.WZ << std::endl;
 
 		vector[0] = mv.VX;
 		vector[1] = mv.VY;
 
-		posx = (std::cos(mv.WZ * (PI / 180))*vector[0]*dt - std::sin(mv.WZ * (PI / 180))*vector[1]*dt + posx);
-		posy = (std::sin(mv.WZ * (PI / 180))*vector[0]*dt + std::cos(mv.WZ * (PI / 180))*vector[1]*dt + posy);
+		rot += mv.WZ;
+		posx = (std::cos(rot)*vector[0] - std::sin(rot)*vector[1] + posx);
+		posy = (std::sin(rot)*vector[0] + std::cos(rot)*vector[1] + posy);
 	}
 
 	void Update(double dt, INVERSE_DATA mv) {

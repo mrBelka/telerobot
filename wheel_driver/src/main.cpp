@@ -58,14 +58,12 @@ class WheelDriver : public rclcpp::Node
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            std::vector<uint16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
+            std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
 
-            //for (auto d: data)
-            //    RCLCPP_INFO(this->get_logger(), "%d", d);
-            encoders_msg.motor_lf = (data[0] << 16) | data[1];
-            encoders_msg.motor_rf = (data[2] << 16) | data[3];
-            encoders_msg.motor_lr = (data[4] << 16) | data[5];
-            encoders_msg.motor_rr = (data[6] << 16) | data[7];
+            encoders_msg.motor_lf = (data[0]*32768) + data[1];
+            encoders_msg.motor_rf = (data[2]*32768) + data[3];
+            encoders_msg.motor_lr = (data[4]*32768) + data[5];
+            encoders_msg.motor_rr = (data[6]*32768) + data[7];
         }
 
         m_encoders_pub->publish(encoders_msg);
