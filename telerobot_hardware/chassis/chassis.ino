@@ -116,11 +116,14 @@ void setup()
   regBank.add(40002);
   regBank.add(40003);
   regBank.add(40004); 
+  regBank.add(40005);
+  regBank.add(40006); //поворот головы
   slave._device = &regBank;  
   slave.setBaud(115200);  
   
-  headRotateServo.attach(44);
-  headPitchServo.attach(45);
+  headRotateServo.attach(44, 500, 2400);
+  //headRotateServo.smoothStart();
+  headPitchServo.attach(45, 90);
   headRotateServo.setCurrentDeg(90);
   headPitchServo.setCurrentDeg(90);
   
@@ -129,11 +132,14 @@ void setup()
   
   headRotateServo.setTargetDeg(90);
   headPitchServo.setTargetDeg(90);
+  
 
   regBank.set(40001, 255);
   regBank.set(40002, 255);
   regBank.set(40003, 255);
   regBank.set(40004, 255);
+  regBank.set(40005, 0);
+  regBank.set(40006, 0);
 }
 
 void loop() {  
@@ -163,7 +169,8 @@ void loop() {
   motorRF->speed(regBank.get(40002) - 255);
   motorLR->speed(regBank.get(40003) - 255);
   motorRR->speed(regBank.get(40004) - 255);
-  
-  
+  headPitchServo.setTargetDeg((word) regBank.get(40005)+90);
+  headRotateServo.setTargetDeg((word)regBank.get(40006) + 90);
+
   slave.run(); 
 }
