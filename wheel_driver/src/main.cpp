@@ -6,6 +6,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "telerobot_interfaces/msg/motor.hpp"
+#include "telerobot_interfaces/msg/head.hpp"
 
 #include <ModbusMaster.hpp>
 
@@ -18,10 +19,10 @@ class WheelDriver : public rclcpp::Node
     WheelDriver() : Node("wheel_driver")
     {
     	std::string device;
-    	declare_parameter("dev", ""); 
+    	declare_parameter("dev", "");
     	get_parameter("dev", device);
-    	
-    	
+
+
         m_modbus = std::make_unique<robot::protocol::ModbusMaster>(device.c_str(), 115200);
         m_modbus->Setup();
 
@@ -30,6 +31,9 @@ class WheelDriver : public rclcpp::Node
 
         m_wheel_commands_sub = this->create_subscription<telerobot_interfaces::msg::Motor>(
                 "wheel_commands", 10, std::bind(&WheelDriver::wheel_commands, this, _1));
+
+        m_servo_commands_sub = this->create_subscription<telerobot_interfaces::msg::Head>(
+                "servo_commands", 10, std::bind(&WheelDriver::servo_commands, this, _1));
     }
 
   private:
@@ -49,7 +53,24 @@ class WheelDriver : public rclcpp::Node
                     static_cast<uint16_t>(msg.motor_rr + 255)
             });
         }
+    }
 
+    void servo_commands(const telerobot_interfaces::msg::Head & msg)
+    {
+        if (msg.motor_rotate >= -45 && msg.motor_rotate <= 45)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_modbus->WriteMultiAnalogOutput(0x01, 0x0006,{
+                    static_cast<uint16_t>(msg.motor_rotate)
+            });
+        }
+        if (msg.motor_pitch >= -20 && msg.motor_pitch <= 20)
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_modbus->WriteMultiAnalogOutput(0x01, 0x0005,{
+                    static_cast<uint16_t>(msg.motor_pitch)
+            });
+        }
     }
 
     void encoders_callback()
@@ -65,7 +86,6 @@ class WheelDriver : public rclcpp::Node
             encoders_msg.motor_lr = (data[4]*32768) + data[5];
             encoders_msg.motor_rr = (data[6]*32768) + data[7];
         }
-
         m_encoders_pub->publish(encoders_msg);
     }
 
@@ -74,6 +94,8 @@ class WheelDriver : public rclcpp::Node
     rclcpp::TimerBase::SharedPtr m_encoders_timer;
     rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_encoders_pub;
     rclcpp::Subscription<telerobot_interfaces::msg::Motor>::SharedPtr m_wheel_commands_sub;
+
+    rclcpp::Subscription<telerobot_interfaces::msg::Head>::SharedPtr m_servo_commands_sub;
 };
 
 int main(int argc, char * argv[])
