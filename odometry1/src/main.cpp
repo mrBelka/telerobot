@@ -43,7 +43,6 @@ class Odometry : public rclcpp::Node
 
     void encodes_callback(const telerobot_interfaces::msg::Motor& encodes_msg)
     {
-        rclcpp::Time now = this->now();
         double motor_lf_position = TICK_TO_RAD * encodes_msg.motor_lf;
         double motor_rf_position = TICK_TO_RAD * encodes_msg.motor_rf;
         double motor_lr_position = TICK_TO_RAD * encodes_msg.motor_lr;
@@ -52,7 +51,7 @@ class Odometry : public rclcpp::Node
         // Joint states block
         auto joint_states_msg = std::make_unique<sensor_msgs::msg::JointState>();
         joint_states_msg->header.frame_id = "base_link";
-        joint_states_msg->header.stamp = now;
+        joint_states_msg->header.stamp = this->now();
         joint_states_msg->name.emplace_back("front_left_wheel_joint");
         joint_states_msg->name.emplace_back("front_right_wheel_joint");
         joint_states_msg->name.emplace_back("rear_left_wheel_joint");
@@ -73,6 +72,7 @@ class Odometry : public rclcpp::Node
             m_last_joint_positions[2] = motor_lr_position;
             m_last_joint_positions[3] = motor_rr_position;
             m_first = false;
+            m_last_time = this->now();
             return;
         }
         m_diff_joint_positions[0] = motor_lf_position - m_last_joint_positions[0];
@@ -85,11 +85,6 @@ class Odometry : public rclcpp::Node
         m_last_joint_positions[3] = motor_rr_position;
 
 
-
-        rclcpp::Duration duration(rclcpp::Duration::from_nanoseconds(
-                now.nanoseconds() - m_last_time.nanoseconds()));
-        double step_time = duration.seconds();
-
         double wheel_lf = m_diff_joint_positions[0];
         double wheel_rf = m_diff_joint_positions[1];
         double wheel_lr = m_diff_joint_positions[2];
@@ -97,7 +92,7 @@ class Odometry : public rclcpp::Node
 
         FORWARD_DATA forw_data {wheel_lf, wheel_rf, wheel_lr, wheel_rr};
 
-        odom_class->Update(step_time, forw_data);
+        odom_class->Update(forw_data);
 
         RCLCPP_INFO(this->get_logger(), "%f", odom_class->posx);
         RCLCPP_INFO(this->get_logger(), "%f", odom_class->posy);
@@ -107,16 +102,20 @@ class Odometry : public rclcpp::Node
         m_robot_pos[1] = odom_class->posy;
         m_robot_pos[2] = odom_class->rot;
 
-        m_robot_vel[0] = odom_class->mv_after_update.VX;
-        m_robot_vel[1] = odom_class->mv_after_update.VY;
-        m_robot_vel[2] = odom_class->mv_after_update.WZ;
+        rclcpp::Duration duration(rclcpp::Duration::from_nanoseconds(
+                this->now().nanoseconds() - m_last_time.nanoseconds()));
+        double step_time = duration.seconds();
+        m_last_time = this->now();
+        m_robot_vel[0] = odom_class->mv_after_update.VX / step_time;
+        m_robot_vel[1] = odom_class->mv_after_update.VY / step_time;
+        m_robot_vel[2] = odom_class->mv_after_update.WZ / step_time;
 
         // Odom publishing
         auto odom_msg = std::make_unique<nav_msgs::msg::Odometry>();
 
         odom_msg->header.frame_id = "odom";
         odom_msg->child_frame_id = "base_footprint";
-        odom_msg->header.stamp = now;
+        odom_msg->header.stamp = this->now();
 
         odom_msg->pose.pose.position.x = m_robot_pos[0];
         odom_msg->pose.pose.position.y = m_robot_pos[1];
@@ -143,14 +142,11 @@ class Odometry : public rclcpp::Node
 
         odom_tf.header.frame_id = "odom";
         odom_tf.child_frame_id = "base_footprint";
-        odom_tf.header.stamp = now;
+        odom_tf.header.stamp = this->now();
 
         m_odom_pub->publish(std::move(odom_msg));
 
-        m_tf_broadcaster->sendTransform(odom_tf);
-
-        m_last_time = this->now();
-
+        //m_tf_broadcaster->sendTransform(odom_tf);
     }
 
 
