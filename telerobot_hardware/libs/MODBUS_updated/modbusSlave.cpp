@@ -15,7 +15,7 @@ void modbusSlave::setBaud(long baud)
 {
 	_baud = baud;
 	//calculate the time perdiod for 3 characters for the given bps in ms.
-	_frameDelay = 10;
+	_frameDelay = 2;
 
 	Serial.begin(baud);
 
