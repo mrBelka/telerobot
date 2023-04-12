@@ -35,8 +35,8 @@ class Odometry : public rclcpp::Node
         m_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("wheel_commands", 10);
         m_odom_commands_sub = this->create_subscription<geometry_msgs::msg::Twist>(
                 "cmd_vel", 10, std::bind(&Odometry::odom_commands, this, _1));
-        m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
-        m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+        m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odometry/unfiltered", 10);
+        //m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
     }
 
   private:
@@ -189,7 +189,7 @@ class Odometry : public rclcpp::Node
     rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_pub;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr m_odom_commands_sub;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
-    std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
+    //std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
 };
 
 int main(int argc, char * argv[])

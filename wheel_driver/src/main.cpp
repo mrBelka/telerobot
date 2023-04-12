@@ -27,7 +27,7 @@ class WheelDriver : public rclcpp::Node
         m_modbus->Setup();
 
         m_encoders_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("encodes", 10);
-        m_encoders_timer = this->create_wall_timer(200ms, std::bind(&WheelDriver::encoders_callback, this));
+        m_encoders_timer = this->create_wall_timer(20ms, std::bind(&WheelDriver::encoders_callback, this));
 
         m_wheel_commands_sub = this->create_subscription<telerobot_interfaces::msg::Motor>(
                 "wheel_commands", 10, std::bind(&WheelDriver::wheel_commands, this, _1));
@@ -75,18 +75,17 @@ class WheelDriver : public rclcpp::Node
 
     void encoders_callback()
     {
-        auto encoders_msg = telerobot_interfaces::msg::Motor();
-
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
-
+        std::lock_guard<std::mutex> lock(m_mutex);
+        std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
+	if(data.size() > 0)
+	{
+	    auto encoders_msg = telerobot_interfaces::msg::Motor();
             encoders_msg.motor_lf = (data[0]*32768) + data[1];
             encoders_msg.motor_rf = (data[2]*32768) + data[3];
             encoders_msg.motor_lr = (data[4]*32768) + data[5];
             encoders_msg.motor_rr = (data[6]*32768) + data[7];
-        }
-        m_encoders_pub->publish(encoders_msg);
+            m_encoders_pub->publish(encoders_msg);
+	}
     }
 
     std::mutex m_mutex;
