@@ -11,7 +11,7 @@ def generate_launch_description():
     use_sim_time = True
 
     ekf_config_path = PathJoinSubstitution(
-        [FindPackageShare("linorobot2_base"), "config", "ekf.yaml"]
+        [FindPackageShare("telerobot_base"), "config", "ekf.yaml"]
     )
 
     world_path = PathJoinSubstitution(
@@ -35,12 +35,6 @@ def generate_launch_description():
             output='screen',
             arguments=["-topic", "robot_description", "-entity", "telerobot"]
         ),
-
-        #Node(
-        #    package='telerobot_gazebo',
-        #    executable='command_timeout.py',
-        #    name='command_timeout'
-        #),
 
         Node(
             package='robot_localization',
