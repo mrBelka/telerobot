@@ -33,12 +33,12 @@ namespace robot::protocol
         buf[6] = crc & 0xFF;
         buf[7] = (crc >> 8) & 0xFF;
 
-        for(int i=0;i<8;i++)
-            printf("%02hhX ", buf[i]);
-        printf("\n");
+        //for(int i=0;i<8;i++)
+        //    printf("%02hhX ", buf[i]);
+        //printf("\n");
 
         std::vector<int16_t> result;
-        if (step < 5) {
+        if (step < 50) {
             step++;
             result.resize(4);
             return result;
@@ -51,18 +51,25 @@ namespace robot::protocol
         size_t n = m_sc->Receive(rbuf, 2*count + 5);
         if(n > 0) {
 
-            for (int i = 0; i < 2*count + 5; i++)
-                printf("%02hhX ", rbuf[i]);
-            printf("\n");
+            //for (int i = 0; i < 2*count + 5; i++)
+            //    printf("%02hhX ", rbuf[i]);
+            //printf("\n");
 
             crc = Modbus_crc16(rbuf, 2*count + 3);
             uint16_t r_crc = rbuf[2*count+3] | (rbuf[2*count+4] << 8);
             //std::cout << crc << " " << r_crc << std::endl;
+	    if(crc == r_crc)
+            {
+		printf("Receive data\n");
+     		for(int i=0;i<2*count;i+=2)
+                   result.push_back(rbuf[i+4] | (rbuf[i+3] << 8));
+            }
+            else
+	    {
+	        printf("CRC error\n");
+            }
         }
 
-
-        for(int i=0;i<2*count;i+=2)
-            result.push_back(rbuf[i+4] | (rbuf[i+3] << 8));
         return result;
     }
 
@@ -78,22 +85,22 @@ namespace robot::protocol
         wbuf[6] = crc & 0xFF;
         wbuf[7] = (crc >> 8) & 0xFF;
 
-        for(int i=0;i<8;i++)
-            printf("%02hhX ", wbuf[i]);
-        printf("\n");
+        //for(int i=0;i<8;i++)
+        //    printf("%02hhX ", wbuf[i]);
+        //printf("\n");
 
         m_sc->Send(wbuf, 8);
 
         uint8_t rbuf[8];
         size_t n = m_sc->Receive(rbuf, 8);
 
-        std::cout << n << " " << (int)rbuf[0] << std::endl;
+        //std::cout << n << " " << (int)rbuf[0] << std::endl;
 
         if(n == 8) {
 
-            for (int i = 0; i < 8; i++)
-                printf("%02hhX ", rbuf[i]);
-            printf("\n");
+            //for (int i = 0; i < 8; i++)
+            //    printf("%02hhX ", rbuf[i]);
+            //printf("\n");
 
             crc = Modbus_crc16(rbuf, 6);
             uint16_t r_crc = rbuf[6] | (rbuf[7] << 8);
@@ -121,9 +128,9 @@ namespace robot::protocol
         wbuf[7 + 2*values.size()] = crc & 0xFF;
         wbuf[7 + 2*values.size() + 1] = (crc >> 8) & 0xFF;
 
-        for(int i=0;i<7 + 2*values.size() + 2;i++)
-            printf("%02hhX ", wbuf[i]);
-        printf("\n");
+        //for(int i=0;i<7 + 2*values.size() + 2;i++)
+        //    printf("%02hhX ", wbuf[i]);
+        //printf("\n");
 
         m_sc->Send(wbuf, 7 + 2*values.size() + 2);
 
@@ -134,14 +141,15 @@ namespace robot::protocol
 
         if(n == 8) {
 
-            for (int i = 0; i < 8; i++)
-                printf("%02hhX ", rbuf[i]);
-            printf("\n");
+            //for (int i = 0; i < 8; i++)
+            //    printf("%02hhX ", rbuf[i]);
+            //printf("\n");
 
             crc = Modbus_crc16(rbuf, 6);
             uint16_t r_crc = rbuf[6] | (rbuf[7] << 8);
-            std::cout << crc << " " << r_crc << std::endl;
+            //std::cout << crc << " " << r_crc << std::endl;
         }
+	return true;
     }
 
     uint16_t ModbusMaster::Modbus_crc16(const unsigned char *buf, size_t len) const
