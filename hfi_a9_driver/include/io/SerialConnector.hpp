@@ -24,7 +24,6 @@ namespace robot::io
             }
             catch (std::exception &e) {
                 std::cerr << e.what() << " " << __FILE__ << __LINE__ << std::endl;
-		return 0;
             }
         }
 
@@ -39,8 +38,7 @@ namespace robot::io
             catch (std::exception& e)
             {
                 std::cerr << e.what() << " " << __FILE__ << __LINE__ << std::endl;
-	    	return 0;
-	    }
+            }
         }
 
         template<typename T, typename = std::enable_if_t<sizeof(T) == sizeof(char)>>
