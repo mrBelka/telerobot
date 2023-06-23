@@ -27,7 +27,7 @@ class WheelDriver : public rclcpp::Node
         m_modbus->Setup();
 
         m_encoders_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("encodes", 10);
-        m_encoders_timer = this->create_wall_timer(20ms, std::bind(&WheelDriver::encoders_callback, this));
+        m_encoders_timer = this->create_wall_timer(10ms, std::bind(&WheelDriver::encoders_callback, this));
 
         m_wheel_commands_sub = this->create_subscription<telerobot_interfaces::msg::Motor>(
                 "wheel_commands", 10, std::bind(&WheelDriver::wheel_commands, this, _1));

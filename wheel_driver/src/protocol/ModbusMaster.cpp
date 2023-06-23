@@ -38,7 +38,7 @@ namespace robot::protocol
         //printf("\n");
 
         std::vector<int16_t> result;
-        if (step < 50) {
+        if (step < 100) {
             step++;
             result.resize(4);
             return result;
