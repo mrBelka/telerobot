@@ -1,3 +1,0 @@
-Beta
-Written by Jason Vreeland [CodeRage]
-Released 3/7/2010 under GNU license

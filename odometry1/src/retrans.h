@@ -34,7 +34,7 @@ struct OdometryClass {
 		double ly
 		): r(r), lx(lx), ly(ly) {}
 
-	void Update(FORWARD_DATA data) {
+	void Update(double dt, FORWARD_DATA data) {
 		std::cout << data.WFL << " " << data.WFR << " " << data.WRL << " " << data.WRR << std::endl;
 		mv_after_update = GetOdometryFORW(data);
 		INVERSE_DATA& mv = mv_after_update;

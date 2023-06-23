@@ -15,7 +15,7 @@
     mass="${base_mass}"
     wheel_radius="${wheel_radius}"
     wheel_pos_z="${wheel_pos_z}"
-  />
+/>
 
   <xacro:mecanum_wheel 
     side="front_left"

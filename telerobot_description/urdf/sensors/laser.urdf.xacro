@@ -38,6 +38,24 @@
       </visual> 
     </gazebo>
 
+    <link name="laser_radius">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.1" length ="0.005"/>
+        </geometry>
+        <material name="blue">
+          <color rgba ="1 1 1 1"/>
+        </material>
+      </visual>
+    </link>
+
+    <joint name ="laser_radius_to_laser" type ="fixed">
+      <parent link="laser"/>
+      <child link="laser_radius"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
     <joint name="${frame_id}_to_base_link" type="fixed">
       <parent link="base_link"/>
       <child link="${frame_id}"/>
