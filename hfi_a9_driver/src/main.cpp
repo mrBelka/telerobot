@@ -23,30 +23,28 @@ class HfiA9_Driver : public rclcpp::Node
 
         m_imu_orientation_pub = this->create_publisher<sensor_msgs::msg::Imu>("imu/orientation", 10);
         m_imu_accel_gyro_pub = this->create_publisher<sensor_msgs::msg::Imu>("imu/accel_gyro", 10);
-        m_encoders_timer = this->create_wall_timer(20ms, std::bind(&HfiA9_Driver::encoders_callback, this));
+        m_poll_timer = this->create_wall_timer(2ms, std::bind(&HfiA9_Driver::poll_callback, this));
+		m_publish_timer = this->create_wall_timer(20ms, std::bind(&HfiA9_Driver::publish_callback, this));
 
-        m_wheel_commands_sub = this->create_subscription<telerobot_interfaces::msg::Motor>(
-                "wheel_commands", 10, std::bind(&HfiA9_Driver::wheel_commands, this, _1));
-
-        m_sc = std::make_unique<robot::io::SerialConnector>("/dev/ttyUSB0", 921600);
+        m_sc = std::make_unique<robot::io::SerialConnector>("/dev/imu", 921600);
         m_sc->Open();
     }
 
   private:
-    void wheel_commands(const telerobot_interfaces::msg::Motor & msg)
+
+    void publish_callback()
     {
-        /*RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lr);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rr);*/
+        
     }
 
-    void encoders_callback()
+    void poll_callback()
     {
         uint8_t rbuf[4096];
         size_t n = m_sc->Receive(rbuf, 4096);
         m_rx_buffer.push_many(rbuf, n);
-
+		//for(int i=0;i<n;i++)
+		//	printf("%hhX ", rbuf[i]);
+		//printf("\n");
         Parser();
     }
 
@@ -71,15 +69,17 @@ class HfiA9_Driver : public rclcpp::Node
         {
             if (buf.peek(0) == 0xAA && buf.peek(1) == 0x55 && buf.peek(2) == 0x2c)
             {
+				//std::cerr << this->now().nanoseconds() << std::endl;
                 std::array<uint8_t, 49> frame;
                 buf.pop_many(frame.data(), frame.size());
 
-#if 0
+#if 1
                 const uint32_t hwTimestamp = (frame[7 + 3] << 24) |	 //
 				(frame[7 + 2] << 16) |	//
 				(frame[7 + 1] << 8) |  //
 				(frame[7 + 0] << 0);
 #endif
+				//std::cerr << hwTimestamp << std::endl;
 
                 float data[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
                 for (int i = 0; i < 9; i++)
@@ -104,6 +104,9 @@ class HfiA9_Driver : public rclcpp::Node
                 auto imu_msg = sensor_msgs::msg::Imu();
 
                 imu_msg.header.frame_id = "imu";
+				imu_msg.header.stamp = this->now() - rclcpp::Duration(0, 3380000); // delta between AA 55 14 pack and AA 55 2C pack
+
+				//std::cerr << std::setprecision(14) << (this->now() - rclcpp::Duration(0, 3380000)).seconds() << std::endl;
 
                 imu_msg.angular_velocity.x = wx;
                 imu_msg.angular_velocity.y = wy;
@@ -124,13 +127,15 @@ class HfiA9_Driver : public rclcpp::Node
                 std::array<uint8_t, 25> frame;
                 buf.pop_many(frame.data(), frame.size());
 
-#if 0
+#if 1 
                 const uint32_t hwTimestamp = (frame[7 + 3] << 24) |	 //
 				(frame[7 + 2] << 16) |	//
 				(frame[7 + 1] << 8) |  //
 				(frame[7 + 0] << 0);
 #endif
 
+				//std::cerr << hwTimestamp << std::endl;
+				
                 float data[3] = {0, 0, 0};
                 for (int i = 0; i < 3; i++)
                 {
@@ -171,6 +176,9 @@ class HfiA9_Driver : public rclcpp::Node
                 orientation.w = w;
 
                 imu_msg.header.frame_id = "imu";
+				imu_msg.header.stamp = this->now();
+
+				//std::cerr << std::setprecision(14) << this->now().seconds() << std::endl;
 
                 imu_msg.orientation = orientation;
 
@@ -186,14 +194,14 @@ class HfiA9_Driver : public rclcpp::Node
         }
     }
 
-
+	
     robot::containers::CircularBuffer<uint8_t> m_rx_buffer{4096};
     std::unique_ptr<robot::io::SerialConnector> m_sc;
 
-    rclcpp::TimerBase::SharedPtr m_encoders_timer;
+    rclcpp::TimerBase::SharedPtr m_publish_timer;
+    rclcpp::TimerBase::SharedPtr m_poll_timer;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr m_imu_orientation_pub;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr m_imu_accel_gyro_pub;
-    rclcpp::Subscription<telerobot_interfaces::msg::Motor>::SharedPtr m_wheel_commands_sub;
 };
 
 int main(int argc, char * argv[])

@@ -7,6 +7,7 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "telerobot_interfaces/msg/motor.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/bool.hpp"
 #include "telerobot_interfaces/msg/motor.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -36,10 +37,17 @@ class Odometry : public rclcpp::Node
         m_odom_commands_sub = this->create_subscription<geometry_msgs::msg::Twist>(
                 "cmd_vel", 10, std::bind(&Odometry::odom_commands, this, _1));
         m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odometry/unfiltered", 10);
-        //m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+        m_body = this->create_subscription<std_msgs::msg::Bool>("is_body", 10, std::bind(&Odometry::is_body, this, _1));
+	//m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
     }
 
   private:
+
+    void is_body(const std_msgs::msg::Bool& body_msg)
+    {
+	m_is_body = body_msg.data;
+	std::cout << "IS BODY " << m_is_body << std::endl;
+    }
 
     void encodes_callback(const telerobot_interfaces::msg::Motor& encodes_msg)
     {
@@ -94,9 +102,9 @@ class Odometry : public rclcpp::Node
 
         odom_class->Update(forw_data);
 
-        RCLCPP_INFO(this->get_logger(), "%f", odom_class->posx);
-        RCLCPP_INFO(this->get_logger(), "%f", odom_class->posy);
-        RCLCPP_INFO(this->get_logger(), "%f", odom_class->rot);
+//        RCLCPP_INFO(this->get_logger(), "%f", odom_class->posx);
+//        RCLCPP_INFO(this->get_logger(), "%f", odom_class->posy);
+//        RCLCPP_INFO(this->get_logger(), "%f", odom_class->rot);
 
         m_robot_pos[0] = odom_class->posx;
         m_robot_pos[1] = odom_class->posy;
@@ -153,9 +161,9 @@ class Odometry : public rclcpp::Node
     void odom_commands(const geometry_msgs::msg::Twist & msg)
     {
         
-        RCLCPP_INFO(this->get_logger(), "%f", msg.linear.x);
-        RCLCPP_INFO(this->get_logger(), "%f", msg.linear.y);
-        RCLCPP_INFO(this->get_logger(), "%f", msg.angular.z);
+//        RCLCPP_INFO(this->get_logger(), "%f", msg.linear.x);
+//        RCLCPP_INFO(this->get_logger(), "%f", msg.linear.y);
+//        RCLCPP_INFO(this->get_logger(), "%f", msg.angular.z);
 
         auto msg1 = telerobot_interfaces::msg::Motor();
 
@@ -163,12 +171,21 @@ class Odometry : public rclcpp::Node
             INVERSE_DATA inv_data{msg.linear.x, msg.linear.y, msg.angular.z};
             FORWARD_DATA data = odom_class->GetOdometryINV(inv_data);
             //std::lock_guard<std::mutex> lock(m_mutex);
-
-            msg1.motor_lf = data.WFL * 100;
-            msg1.motor_rf = data.WFR * 100;
-            msg1.motor_lr = data.WRL * 100;
-            msg1.motor_rr = data.WRR * 100;
-        }
+		if(m_is_body)
+		{
+			msg1.motor_lf = data.WFL * 10;
+	            msg1.motor_rf = data.WFR * 10;
+	            msg1.motor_lr = data.WRL * 10;
+	            msg1.motor_rr = data.WRR * 10;
+		}
+		else
+		{
+	            msg1.motor_lf = data.WFL * 100;
+	            msg1.motor_rf = data.WFR * 100;
+	            msg1.motor_lr = data.WRL * 100;
+	            msg1.motor_rr = data.WRR * 100;
+	        }
+	}
 
         m_pub->publish(msg1);
 
@@ -183,12 +200,15 @@ class Odometry : public rclcpp::Node
 
     double m_robot_pos[3] = {0,0,0};
     double m_robot_vel[3] = {0,0,0};
+	
+	bool m_is_body = false;
 
     rclcpp::Time m_last_time;
     std::unique_ptr<OdometryClass> odom_class;
     rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_pub;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr m_odom_commands_sub;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr m_body;
     //std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
 };
 
