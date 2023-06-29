@@ -1,0 +1,4 @@
+imutils~=0.5.4
+opencv-python~=4.7.0.72
+numpy~=1.23.5
+keras~=2.12.0
