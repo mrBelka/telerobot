@@ -16,7 +16,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 
 
-#define TICK_TO_RAD 0.00253354246
+#define TICK_TO_RAD 0.00253
 
 using std::placeholders::_1;
 
@@ -32,22 +32,15 @@ class Odometry : public rclcpp::Node
 
         m_last_time = this->now();
 
-        odom_class = std::make_unique<OdometryClass>(0.04, 0.125, 0.11);
+        odom_class = std::make_unique<OdometryClass>(0.04, 0.1215, 0.11);
         m_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("wheel_commands", 10);
         m_odom_commands_sub = this->create_subscription<geometry_msgs::msg::Twist>(
                 "cmd_vel", 10, std::bind(&Odometry::odom_commands, this, _1));
         m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odometry/unfiltered", 10);
-        m_body = this->create_subscription<std_msgs::msg::Bool>("is_body", 10, std::bind(&Odometry::is_body, this, _1));
-	//m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+    	//m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
     }
 
   private:
-
-    void is_body(const std_msgs::msg::Bool& body_msg)
-    {
-	m_is_body = body_msg.data;
-	std::cout << "IS BODY " << m_is_body << std::endl;
-    }
 
     void encodes_callback(const telerobot_interfaces::msg::Motor& encodes_msg)
     {
@@ -171,7 +164,7 @@ class Odometry : public rclcpp::Node
             INVERSE_DATA inv_data{msg.linear.x, msg.linear.y, msg.angular.z};
             FORWARD_DATA data = odom_class->GetOdometryINV(inv_data);
             //std::lock_guard<std::mutex> lock(m_mutex);
-		if(m_is_body)
+		/*if(m_is_body)
 		{
 			msg1.motor_lf = data.WFL * 10;
 	            msg1.motor_rf = data.WFR * 10;
@@ -179,12 +172,12 @@ class Odometry : public rclcpp::Node
 	            msg1.motor_rr = data.WRR * 10;
 		}
 		else
-		{
+		{*/
 	            msg1.motor_lf = data.WFL * 100;
 	            msg1.motor_rf = data.WFR * 100;
 	            msg1.motor_lr = data.WRL * 100;
 	            msg1.motor_rr = data.WRR * 100;
-	        }
+	       // }
 	}
 
         m_pub->publish(msg1);

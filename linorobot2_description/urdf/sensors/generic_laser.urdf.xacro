@@ -6,10 +6,10 @@
     <xacro:laser
       update_rate="10"
       ray_count="360"
-      min_angle="-3.1416"
-      max_angle="3.1416"
+      min_angle="-2.09"
+      max_angle="2.09"
       min_range="0.08"
-      max_range="12.0"
+      max_range="5.6"
       frame_id="laser"
       topic_name="scan"
     >
