@@ -39,18 +39,18 @@ class WheelDriver : public rclcpp::Node
   private:
     void wheel_commands(const telerobot_interfaces::msg::Motor & msg)
     {
-        /*RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lr);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rr);*/
+        /*RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lf);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rf);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lr);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rr);*/
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_modbus->WriteMultiAnalogOutput(0x01, 0x0001,{
-                    static_cast<uint16_t>(msg.motor_lf + 255),
-                    static_cast<uint16_t>(msg.motor_rf + 255),
-                    static_cast<uint16_t>(msg.motor_lr + 255),
-                    static_cast<uint16_t>(msg.motor_rr + 255)
+                    static_cast<uint16_t>(msg.motor_lf*100 + 3000),
+                    static_cast<uint16_t>(msg.motor_rf*100 + 3000),
+                    static_cast<uint16_t>(msg.motor_lr*100 + 3000),
+                    static_cast<uint16_t>(msg.motor_rr*100 + 3000)
             });
         }
     }
@@ -80,10 +80,10 @@ class WheelDriver : public rclcpp::Node
 	if(data.size() > 0)
 	{
 	    auto encoders_msg = telerobot_interfaces::msg::Motor();
-            encoders_msg.motor_lf = (data[0]*32768) + data[1];
-            encoders_msg.motor_rf = (data[2]*32768) + data[3];
-            encoders_msg.motor_lr = (data[4]*32768) + data[5];
-            encoders_msg.motor_rr = (data[6]*32768) + data[7];
+            encoders_msg.motor_lf = ((data[0]*32768) + data[1])/1000000.f;
+            encoders_msg.motor_rf = ((data[2]*32768) + data[3])/1000000.f;
+            encoders_msg.motor_lr = ((data[4]*32768) + data[5])/1000000.f;
+            encoders_msg.motor_rr = ((data[6]*32768) + data[7])/1000000.f;
             m_encoders_pub->publish(encoders_msg);
 	}
     }

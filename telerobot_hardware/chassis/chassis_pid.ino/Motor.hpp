@@ -36,9 +36,9 @@ public:
     float avr_signal = expRunningAverage(signal);
     //Serial.print(signal);
     //Serial.print(",");
-    int controlAction = computePID(avr_signal, 32.4, 33, 10, dt, 0, 255);   // 810/25, 324/25, 506/25
+    int controlAction = computePID(avr_signal, 32.4, 33, 10, dt, -255, 255);   // 810/25, 324/25, 506/25
     speed(controlAction);
-    return avr_signal;
+    return signal;
   }
 
     // коэффициент фильтрации, 0.0-1.0
