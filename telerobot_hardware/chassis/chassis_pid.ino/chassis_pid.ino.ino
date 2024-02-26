@@ -41,6 +41,8 @@ void setup()
   delay(50);
 }
 
+int t = 0;
+
 void loop() { 
 
  /* if(Serial.available()>0)
@@ -62,43 +64,44 @@ void loop() {
       }
   }*/
 
-  float lf_sig = motorLF.Job();
-  float rf_sig = motorRF.Job();
-  float lr_sig = motorLR.Job();
-  float rr_sig = motorRR.Job();
+    float lf_sig = motorLF.Job();
+    float rf_sig = motorRF.Job();
+    float lr_sig = motorLR.Job();
+    float rr_sig = motorRR.Job();
 
 
-  /*Serial.print(lf_sig);
-  Serial.print(",");
-  Serial.print(rf_sig);
-  Serial.print(",");
-  Serial.print(lr_sig);
-  Serial.print(",");
-  Serial.println(rr_sig);*/
+    /*Serial.print(lf_sig);
+    Serial.print(",");
+    Serial.print(rf_sig);
+    Serial.print(",");
+    Serial.print(lr_sig);
+    Serial.print(",");
+    Serial.println(rr_sig);*/
 
-  long LFpos = lf_sig * 1000000;
-  regBank.set(30001, (word) (LFpos / 32768) );
-  regBank.set(30002, (word) (LFpos % 32768) );
-  
-  long RFpos = rf_sig * 1000000;
-  regBank.set(30003, (word) (RFpos / 32768) );
-  regBank.set(30004, (word) (RFpos % 32768) );
-  
-  long LRpos = lr_sig * 1000000;
-  regBank.set(30005, (word) (LRpos / 32768) );
-  regBank.set(30006, (word) (LRpos % 32768) );
-  
-  long RRpos = rr_sig * 1000000;
-  regBank.set(30007, (word) (RRpos / 32768) );
-  regBank.set(30008, (word) (RRpos % 32768) );
+    long LFpos = lf_sig * 1000000;
+    //regBank.set(30001, (word) (LFpos / 32768) );
+    regBank.set(30001, regBank.get(40001));
+    regBank.set(30002, 0/*(word) (LFpos % 32768)*/ );
+    
+    long RFpos = rf_sig * 1000000;
+    regBank.set(30003, (word) (RFpos / 32768) );
+    regBank.set(30004, (word) (RFpos % 32768) );
+    
+    long LRpos = lr_sig * 1000000;
+    regBank.set(30005, (word) (LRpos / 32768) );
+    regBank.set(30006, (word) (LRpos % 32768) );
+    
+    long RRpos = rr_sig * 1000000;
+    regBank.set(30007, (word) (RRpos / 32768) );
+    regBank.set(30008, (word) (RRpos % 32768) );
 
-  // Set data
-  motorLF.setTarget((regBank.get(40001) - 3000)/100.f);
-  motorRF.setTarget((regBank.get(40002) - 3000)/100.f);
-  motorLR.setTarget((regBank.get(40003) - 3000)/100.f);
-  motorRR.setTarget((regBank.get(40004) - 3000)/100.f);
+    // Set data
+    motorLF.setTarget((int16_t)(regBank.get(40001)-3000)/100.f);
+    motorRF.setTarget((int16_t)(regBank.get(40002)-3000)/100.f);
+    motorLR.setTarget((int16_t)(regBank.get(40003)-3000)/100.f);
+    motorRR.setTarget((int16_t)(regBank.get(40004)-3000)/100.f);
 
   slave.run();
 
-  delay(45);
+  delay(50);
 }

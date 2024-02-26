@@ -34,23 +34,25 @@ class WheelDriver : public rclcpp::Node
 
         m_servo_commands_sub = this->create_subscription<telerobot_interfaces::msg::Head>(
                 "servo_commands", 10, std::bind(&WheelDriver::servo_commands, this, _1));
+                
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 
   private:
     void wheel_commands(const telerobot_interfaces::msg::Motor & msg)
     {
-        /*RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lf);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lf);
         RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rf);
         RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lr);
-        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rr);*/
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rr);
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_modbus->WriteMultiAnalogOutput(0x01, 0x0001,{
-                    static_cast<uint16_t>(msg.motor_lf*100 + 3000),
-                    static_cast<uint16_t>(msg.motor_rf*100 + 3000),
-                    static_cast<uint16_t>(msg.motor_lr*100 + 3000),
-                    static_cast<uint16_t>(msg.motor_rr*100 + 3000)
+                    static_cast<int16_t>(msg.motor_lf*100 + 3000),
+                    static_cast<int16_t>(msg.motor_rf*100 + 3000),
+                    static_cast<int16_t>(msg.motor_lr*100 + 3000),
+                    static_cast<int16_t>(msg.motor_rr*100 + 3000)
             });
         }
     }
