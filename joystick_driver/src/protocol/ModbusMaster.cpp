@@ -33,9 +33,9 @@ namespace robot::protocol
         buf[6] = crc & 0xFF;
         buf[7] = (crc >> 8) & 0xFF;
 
-        for(int i=0;i<8;i++)
-            printf("%02hhX ", buf[i]);
-        printf("\n");
+        //for(int i=0;i<8;i++)
+        //    printf("%02hhX ", buf[i]);
+        //printf("\n");
 
         m_sc->Send(buf, 8);
 
@@ -44,9 +44,9 @@ namespace robot::protocol
         size_t n = m_sc->Receive(rbuf, 2*count + 5);
         if(n > 0) {
 
-            for (int i = 0; i < 2*count + 5; i++)
-                printf("%02hhX ", rbuf[i]);
-            printf("\n");
+            //for (int i = 0; i < 2*count + 5; i++)
+            //    printf("%02hhX ", rbuf[i]);
+            //printf("\n");
 
             crc = Modbus_crc16(rbuf, 2*count + 3);
             uint16_t r_crc = rbuf[2*count+3] | (rbuf[2*count+4] << 8);
