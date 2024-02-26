@@ -173,10 +173,10 @@ class Odometry : public rclcpp::Node
 		}
 		else
 		{*/
-	            msg1.motor_lf = data.WFL * 100;
-	            msg1.motor_rf = data.WFR * 100;
-	            msg1.motor_lr = data.WRL * 100;
-	            msg1.motor_rr = data.WRR * 100;
+	            msg1.motor_lf = data.WFL;
+	            msg1.motor_rf = data.WFR;
+	            msg1.motor_lr = data.WRL;
+	            msg1.motor_rr = data.WRR;
 	       // }
 	}
 

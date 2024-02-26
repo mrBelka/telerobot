@@ -24,7 +24,7 @@ public:
 
         m_joystick_pub = this->create_publisher<joystick_msgs::msg::Joystick>("/joystick", 10);
         m_twist_pub = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
-        m_joystick_timer = this->create_wall_timer(100ms, std::bind(&Joystick::joystick_callback, this));
+        m_joystick_timer = this->create_wall_timer(50ms, std::bind(&Joystick::joystick_callback, this));
         
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
@@ -76,7 +76,8 @@ private:
 
         auto msg_cmd_vel = geometry_msgs::msg::Twist();
 
-        msg_cmd_vel.linear.x = -18.0f*normalize(data[0] - 500, 370, 20);
+        msg_cmd_vel.linear.x = -0.5f*normalize(data[0] - 500, 370, 50);
+        msg_cmd_vel.angular.z = -normalize(data[2] - 500, 370, 100);
 
         m_twist_pub->publish(msg_cmd_vel);
         
