@@ -1,4 +1,4 @@
-int32 motor_lf
-int32 motor_rf
-int32 motor_lr
-int32 motor_rr
+float32 motor_lf
+float32 motor_rf
+float32 motor_lr
+float32 motor_rr

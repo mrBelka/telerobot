@@ -60,7 +60,7 @@ namespace robot::protocol
             //std::cout << crc << " " << r_crc << std::endl;
 	    if(crc == r_crc)
             {
-		printf("Receive data\n");
+		//printf("Receive data\n");
      		for(int i=0;i<2*count;i+=2)
                    result.push_back(rbuf[i+4] | (rbuf[i+3] << 8));
             }
