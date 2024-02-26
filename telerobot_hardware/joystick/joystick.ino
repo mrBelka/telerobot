@@ -3,6 +3,8 @@
 #include <modbusRegBank.h>
 #include <modbusSlave.h>
 
+// Arduino nano Atmega168
+
 modbusDevice regBank;
 modbusSlave slave;
 

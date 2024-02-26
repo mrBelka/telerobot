@@ -14,7 +14,7 @@ public:
     Joystick() : Node("wheel_driver")
     {
         std::string device;
-        declare_parameter("dev", "/dev/ttyUSB0");
+        declare_parameter("dev", "/dev/ttyUSB1");
         get_parameter("dev", device);
 
 
@@ -22,7 +22,9 @@ public:
         m_modbus->Setup();
 
         m_cmd_vel_pub = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
-        m_joystick_timer = this->create_wall_timer(1000ms, std::bind(&Joystick::joystick_callback, this));
+        m_joystick_timer = this->create_wall_timer(100ms, std::bind(&Joystick::joystick_callback, this));
+        
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 
 private:
@@ -37,7 +39,7 @@ private:
 
     void joystick_callback()
     {
-        std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
+        std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 14);
         for (int i = 0; i < data.size(); i++){
             std::cout << data[i] <<std::endl;
         }

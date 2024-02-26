@@ -37,13 +37,6 @@ namespace robot::protocol
             printf("%02hhX ", buf[i]);
         printf("\n");
 
-        std::vector<int16_t> result;
-        if (step < 5) {
-            step++;
-            result.resize(4);
-            return result;
-        }
-
         m_sc->Send(buf, 8);
 
         uint8_t rbuf[512];
@@ -60,7 +53,7 @@ namespace robot::protocol
             //std::cout << crc << " " << r_crc << std::endl;
         }
 
-
+	std::vector<int16_t> result;
         for(int i=0;i<2*count;i+=2)
             result.push_back(rbuf[i+4] | (rbuf[i+3] << 8));
         return result;
