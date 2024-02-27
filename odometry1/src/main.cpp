@@ -161,7 +161,18 @@ class Odometry : public rclcpp::Node
         auto msg1 = telerobot_interfaces::msg::Motor();
 
         {
-            INVERSE_DATA inv_data{msg.linear.x, msg.linear.y, msg.angular.z};
+			float lin_x = msg.linear.x;
+			if(lin_x > 0.05)
+				lin_x = 0.05;
+			if(lin_x < -0.05)
+				lin_x = -0.05;
+			float ang_z = msg.angular.z;
+			if(ang_z > 0.1)
+				ang_z = 0.1;
+			if(ang_z < -0.1)
+				ang_z = -0.1;
+
+            INVERSE_DATA inv_data{lin_x, msg.linear.y, ang_z};
             FORWARD_DATA data = odom_class->GetOdometryINV(inv_data);
             //std::lock_guard<std::mutex> lock(m_mutex);
 		/*if(m_is_body)
