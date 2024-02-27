@@ -5,6 +5,7 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <ModbusMaster.hpp>
 #include "joystick_msgs/msg/joystick.hpp"
+#include "telerobot_interfaces/msg/head.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -24,6 +25,7 @@ public:
 
         m_joystick_pub = this->create_publisher<joystick_msgs::msg::Joystick>("/joystick", 10);
         m_twist_pub = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+        m_head_pub = this->create_publisher<telerobot_interfaces::msg::Head>("/servo_commands", 10);
         m_joystick_timer = this->create_wall_timer(50ms, std::bind(&Joystick::joystick_callback, this));
         
         std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -81,6 +83,19 @@ private:
 
         m_twist_pub->publish(msg_cmd_vel);
         
+        if(data[4] == false)
+        	pit--;
+        if(data[5] == false)
+        	pit++;
+        if(data[6] == false)
+        	rot++;
+        if(data[7] == false)
+        	rot--;
+        	
+        auto msg_head = telerobot_interfaces::msg::Head();
+        msg_head.motor_rotate = rot;
+        msg_head.motor_pitch = pit;
+        m_head_pub->publish(msg_head);
     }
 
     std::mutex m_mutex;
@@ -88,6 +103,10 @@ private:
     rclcpp::TimerBase::SharedPtr m_joystick_timer;
     rclcpp::Publisher<joystick_msgs::msg::Joystick>::SharedPtr m_joystick_pub;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_twist_pub;
+    rclcpp::Publisher<telerobot_interfaces::msg::Head>::SharedPtr m_head_pub;
+    
+    int rot = 0;
+    int pit = 0;
 };
 
 int main(int argc, char * argv[])
