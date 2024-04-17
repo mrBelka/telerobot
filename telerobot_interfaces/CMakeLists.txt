@@ -7,6 +7,6 @@ find_package(ament_cmake REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME} "msg/Motor.msg" "msg/Battery.msg" "msg/Head.msg")
+rosidl_generate_interfaces(${PROJECT_NAME} "msg/Motor.msg" "msg/Battery.msg" "msg/Head.msg" "msg/Power.msg")
 
 ament_package()
