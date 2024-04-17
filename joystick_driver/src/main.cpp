@@ -16,7 +16,7 @@ public:
     Joystick() : Node("joystick_driver")
     {
         std::string device;
-        declare_parameter("dev", "/dev/ttyUSB1");
+        declare_parameter("dev", "/dev/ttyUSB0");
         get_parameter("dev", device);
 
 

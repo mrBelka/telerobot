@@ -18,6 +18,24 @@ SPDMotor motorRR( 2, A1, true, 5, A4, A5); // <- NOTE: Motor Dir pins reversed f
 ServoSmooth headRotateServo;
 ServoSmooth headPitchServo;
 
+const float defaultCharge = 12.7;
+
+const int middleArifmPower = 100;  
+
+float midArifm2(float newVal) {
+  static byte counter = 0;     
+  static float prevResult = 0; 
+  static float sum = 0;  
+  sum += newVal;   
+  counter++;      
+  if (counter == middleArifmPower) {      
+    prevResult = sum / middleArifmPower;
+    sum = 0;
+    counter = 0;
+  }
+  return prevResult;
+}
+
 void setup()
 {
   regBank.setId(1);
@@ -35,6 +53,9 @@ void setup()
   regBank.add(40004);
   regBank.add(40005);
   regBank.add(40006); //поворот головы
+  
+  regBank.add(30009); //питание
+  regBank.add(30010);
 
   regBank.set(40001, 3000);
   regBank.set(40002, 3000);
@@ -54,6 +75,8 @@ void setup()
   headPitchServo.setSpeed(30);
   headRotateServo.setTargetDeg(90);
   headPitchServo.setTargetDeg(90);
+
+  analogReference(EXTERNAL);
 
   delay(50);
 }
@@ -80,6 +103,27 @@ void loop() {
   long RRpos = rr_sig * 1000000;
   regBank.set(30007, (word) (RRpos / 32768) );
   regBank.set(30008, (word) (RRpos % 32768) );
+  //test
+  int data = analogRead(A0);  
+
+  float dataNew = (0.0230483271375*midArifm2(data));
+  float chargePercentageProcess;
+
+  if(dataNew > 12.7)
+  {
+    chargePercentageProcess = 100;  
+  }
+  else if(dataNew < 11.5)
+  {
+    chargePercentageProcess = 0.0;
+  }
+  else
+  {
+    chargePercentageProcess = ((dataNew - 11.7)/(defaultCharge - 11.7))*100;
+  }
+  
+  regBank.set(30009, (dataNew*100));
+  regBank.set(30010, (chargePercentageProcess*100));
 
   // Set data
   motorLF.setTarget((int16_t)(regBank.get(40001)-3000)/100.f);
