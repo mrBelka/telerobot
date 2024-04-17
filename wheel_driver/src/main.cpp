@@ -6,6 +6,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include "telerobot_interfaces/msg/motor.hpp"
+#include "telerobot_interfaces/msg/power.hpp"
 #include "telerobot_interfaces/msg/head.hpp"
 
 #include <ModbusMaster.hpp>
@@ -27,30 +28,34 @@ class WheelDriver : public rclcpp::Node
         m_modbus->Setup();
 
         m_encoders_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("encodes", 10);
+		m_power_pub = this->create_publisher<telerobot_interfaces::msg::Power>("power", 10);
         m_encoders_timer = this->create_wall_timer(10ms, std::bind(&WheelDriver::encoders_callback, this));
+		m_power_timer = this->create_wall_timer(1s, std::bind(&WheelDriver::power_callback, this));
 
         m_wheel_commands_sub = this->create_subscription<telerobot_interfaces::msg::Motor>(
                 "wheel_commands", 10, std::bind(&WheelDriver::wheel_commands, this, _1));
 
         m_servo_commands_sub = this->create_subscription<telerobot_interfaces::msg::Head>(
                 "servo_commands", 10, std::bind(&WheelDriver::servo_commands, this, _1));
+                
+        std::this_thread::sleep_for(std::chrono::seconds(4));
     }
 
   private:
     void wheel_commands(const telerobot_interfaces::msg::Motor & msg)
     {
-        /*RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rf);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_lr);
-        RCLCPP_INFO(this->get_logger(), "%d", msg.motor_rr);*/
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lf);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rf);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_lr);
+        RCLCPP_INFO(this->get_logger(), "%lf", msg.motor_rr);
 
         {
             std::lock_guard<std::mutex> lock(m_mutex);
             m_modbus->WriteMultiAnalogOutput(0x01, 0x0001,{
-                    static_cast<uint16_t>(msg.motor_lf + 255),
-                    static_cast<uint16_t>(msg.motor_rf + 255),
-                    static_cast<uint16_t>(msg.motor_lr + 255),
-                    static_cast<uint16_t>(msg.motor_rr + 255)
+                    static_cast<int16_t>(msg.motor_lf*100 + 3000),
+                    static_cast<int16_t>(msg.motor_rf*100 + 3000),
+                    static_cast<int16_t>(msg.motor_lr*100 + 3000),
+                    static_cast<int16_t>(msg.motor_rr*100 + 3000)
             });
         }
     }
@@ -77,21 +82,37 @@ class WheelDriver : public rclcpp::Node
     {
         std::lock_guard<std::mutex> lock(m_mutex);
         std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0001, 8);
-	if(data.size() > 0)
-	{
-	    auto encoders_msg = telerobot_interfaces::msg::Motor();
-            encoders_msg.motor_lf = (data[0]*32768) + data[1];
-            encoders_msg.motor_rf = (data[2]*32768) + data[3];
-            encoders_msg.motor_lr = (data[4]*32768) + data[5];
-            encoders_msg.motor_rr = (data[6]*32768) + data[7];
-            m_encoders_pub->publish(encoders_msg);
-	}
+		if(data.size() > 0)
+		{
+	    	auto encoders_msg = telerobot_interfaces::msg::Motor();
+            	encoders_msg.motor_lf = ((data[0]*32768) + data[1])/1000000.f;
+            	encoders_msg.motor_rf = ((data[2]*32768) + data[3])/1000000.f;
+            	encoders_msg.motor_lr = ((data[4]*32768) + data[5])/1000000.f;
+            	encoders_msg.motor_rr = ((data[6]*32768) + data[7])/1000000.f;
+            	m_encoders_pub->publish(encoders_msg);
+		}
     }
+
+	void power_callback()
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);  
+		std::vector<int16_t> data = m_modbus->ReadAnalogInput(0x01, 0x0009, 2);
+		if(data.size() > 0)
+    	{
+        	auto power_msg = telerobot_interfaces::msg::Power();
+           	power_msg.voltage = data[0]/100.f;
+           	power_msg.percent = data[1]/100.f;
+           	m_power_pub->publish(power_msg);
+    	}
+    }
+
 
     std::mutex m_mutex;
     std::unique_ptr<robot::protocol::ModbusMaster> m_modbus;
     rclcpp::TimerBase::SharedPtr m_encoders_timer;
-    rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_encoders_pub;
+    rclcpp::TimerBase::SharedPtr m_power_timer;
+	rclcpp::Publisher<telerobot_interfaces::msg::Motor>::SharedPtr m_encoders_pub;
+	rclcpp::Publisher<telerobot_interfaces::msg::Power>::SharedPtr m_power_pub;
     rclcpp::Subscription<telerobot_interfaces::msg::Motor>::SharedPtr m_wheel_commands_sub;
 
     rclcpp::Subscription<telerobot_interfaces::msg::Head>::SharedPtr m_servo_commands_sub;

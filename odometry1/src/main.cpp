@@ -15,8 +15,11 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <fstream>
+#include <iomanip>
 
-#define TICK_TO_RAD 0.00253354246
+
+#define TICK_TO_RAD 0.00253
 
 using std::placeholders::_1;
 
@@ -32,29 +35,24 @@ class Odometry : public rclcpp::Node
 
         m_last_time = this->now();
 
-        odom_class = std::make_unique<OdometryClass>(0.04, 0.125, 0.11);
+        odom_class = std::make_unique<OdometryClass>(0.04, 0.1215, 0.11);
         m_pub = this->create_publisher<telerobot_interfaces::msg::Motor>("wheel_commands", 10);
         m_odom_commands_sub = this->create_subscription<geometry_msgs::msg::Twist>(
                 "cmd_vel", 10, std::bind(&Odometry::odom_commands, this, _1));
         m_odom_pub = this->create_publisher<nav_msgs::msg::Odometry>("odometry/unfiltered", 10);
-        m_body = this->create_subscription<std_msgs::msg::Bool>("is_body", 10, std::bind(&Odometry::is_body, this, _1));
-	//m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+    	//m_tf_broadcaster = std::make_unique<tf2_ros::TransformBroadcaster>(this);
+    	
+    	m_out.open("/home/misha/out.txt");
     }
 
   private:
 
-    void is_body(const std_msgs::msg::Bool& body_msg)
-    {
-	m_is_body = body_msg.data;
-	std::cout << "IS BODY " << m_is_body << std::endl;
-    }
-
     void encodes_callback(const telerobot_interfaces::msg::Motor& encodes_msg)
     {
-        double motor_lf_position = TICK_TO_RAD * encodes_msg.motor_lf;
-        double motor_rf_position = TICK_TO_RAD * encodes_msg.motor_rf;
-        double motor_lr_position = TICK_TO_RAD * encodes_msg.motor_lr;
-        double motor_rr_position = TICK_TO_RAD * encodes_msg.motor_rr;
+        double motor_lf_position = encodes_msg.motor_lf;
+        double motor_rf_position = encodes_msg.motor_rf;
+        double motor_lr_position = encodes_msg.motor_lr;
+        double motor_rr_position = encodes_msg.motor_rr;
 
         // Joint states block
         auto joint_states_msg = std::make_unique<sensor_msgs::msg::JointState>();
@@ -83,14 +81,14 @@ class Odometry : public rclcpp::Node
             m_last_time = this->now();
             return;
         }
-        m_diff_joint_positions[0] = motor_lf_position - m_last_joint_positions[0];
-        m_diff_joint_positions[1] = motor_rf_position - m_last_joint_positions[1];
-        m_diff_joint_positions[2] = motor_lr_position - m_last_joint_positions[2];
-        m_diff_joint_positions[3] = motor_rr_position - m_last_joint_positions[3];
-        m_last_joint_positions[0] = motor_lf_position;
+        m_diff_joint_positions[0] = motor_lf_position;// - m_last_joint_positions[0];
+        m_diff_joint_positions[1] = motor_rf_position;// - m_last_joint_positions[1];
+        m_diff_joint_positions[2] = motor_lr_position;// - m_last_joint_positions[2];
+        m_diff_joint_positions[3] = motor_rr_position;// - m_last_joint_positions[3];
+        /*m_last_joint_positions[0] = motor_lf_position;
         m_last_joint_positions[1] = motor_rf_position;
         m_last_joint_positions[2] = motor_lr_position;
-        m_last_joint_positions[3] = motor_rr_position;
+        m_last_joint_positions[3] = motor_rr_position;*/
 
 
         double wheel_lf = m_diff_joint_positions[0];
@@ -114,9 +112,9 @@ class Odometry : public rclcpp::Node
                 this->now().nanoseconds() - m_last_time.nanoseconds()));
         double step_time = duration.seconds();
         m_last_time = this->now();
-        m_robot_vel[0] = odom_class->mv_after_update.VX / step_time;
-        m_robot_vel[1] = odom_class->mv_after_update.VY / step_time;
-        m_robot_vel[2] = odom_class->mv_after_update.WZ / step_time;
+        m_robot_vel[0] = odom_class->mv_after_update.VX;// / step_time;
+        m_robot_vel[1] = odom_class->mv_after_update.VY;// / step_time;
+        m_robot_vel[2] = odom_class->mv_after_update.WZ;// / step_time;
 
         // Odom publishing
         auto odom_msg = std::make_unique<nav_msgs::msg::Odometry>();
@@ -140,6 +138,7 @@ class Odometry : public rclcpp::Node
         odom_msg->twist.twist.linear.x = m_robot_vel[0];
         odom_msg->twist.twist.linear.y = m_robot_vel[1];
         odom_msg->twist.twist.angular.z = m_robot_vel[2];
+        m_out << std::setprecision(5) << m_robot_vel[0] << "," << m_robot_vel[1] << "," << m_robot_vel[2] << std::endl;
 
         geometry_msgs::msg::TransformStamped odom_tf;
 
@@ -171,7 +170,7 @@ class Odometry : public rclcpp::Node
             INVERSE_DATA inv_data{msg.linear.x, msg.linear.y, msg.angular.z};
             FORWARD_DATA data = odom_class->GetOdometryINV(inv_data);
             //std::lock_guard<std::mutex> lock(m_mutex);
-		if(m_is_body)
+		/*if(m_is_body)
 		{
 			msg1.motor_lf = data.WFL * 10;
 	            msg1.motor_rf = data.WFR * 10;
@@ -179,12 +178,12 @@ class Odometry : public rclcpp::Node
 	            msg1.motor_rr = data.WRR * 10;
 		}
 		else
-		{
-	            msg1.motor_lf = data.WFL * 100;
-	            msg1.motor_rf = data.WFR * 100;
-	            msg1.motor_lr = data.WRL * 100;
-	            msg1.motor_rr = data.WRR * 100;
-	        }
+		{*/
+	            msg1.motor_lf = data.WFL;
+	            msg1.motor_rf = data.WFR;
+	            msg1.motor_lr = data.WRL;
+	            msg1.motor_rr = data.WRR;
+	       // }
 	}
 
         m_pub->publish(msg1);
@@ -210,6 +209,7 @@ class Odometry : public rclcpp::Node
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr m_odom_pub;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr m_body;
     //std::unique_ptr<tf2_ros::TransformBroadcaster> m_tf_broadcaster;
+    std::ofstream m_out;
 };
 
 int main(int argc, char * argv[])

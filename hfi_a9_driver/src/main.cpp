@@ -93,8 +93,8 @@ class HfiA9_Driver : public rclcpp::Node
                     data[i] = *(reinterpret_cast<float*>(&d));
                 }
 
-                const float wx = data[0], wy = data[1], wz = data[2];
-                const float ax = data[3], ay = data[4], az = data[5];
+                const float wx = data[1], wy = data[0], wz = data[2];
+                const float ax = 9.8*data[4], ay = 9.8*data[3], az = 9.8*data[5];
                 const float mx = data[6], my = data[7], mz = data[8];
 
                 /*std::cout << wx << " " << wy << " " << wz << std::endl;
@@ -103,7 +103,7 @@ class HfiA9_Driver : public rclcpp::Node
 
                 auto imu_msg = sensor_msgs::msg::Imu();
 
-                imu_msg.header.frame_id = "imu";
+                imu_msg.header.frame_id = "imu_link";
 				imu_msg.header.stamp = this->now() - rclcpp::Duration(0, 3380000); // delta between AA 55 14 pack and AA 55 2C pack
 
 				//std::cerr << std::setprecision(14) << (this->now() - rclcpp::Duration(0, 3380000)).seconds() << std::endl;
@@ -147,11 +147,12 @@ class HfiA9_Driver : public rclcpp::Node
                             (frame[11 + 4 * i + 0] << 0);
                     data[i] = *(reinterpret_cast<float*>(&d));
                 }
+//		std::swap(data[0], data[1]);
 
                 float eular_div[3] = {0};
                 eular_div[0] = acos(-1) * (data[0]) / 180 / 2.0;
-                eular_div[1] = - acos(-1) * (data[1]) / 180 / 2.0;
-                eular_div[2] = - acos(-1) * (data[2]) / 180 / 2.0;
+                eular_div[1] = -acos(-1) * (data[1]) / 180 / 2.0;
+                eular_div[2] = -acos(-1) * (data[2]) / 180 / 2.0;
 
                 float ca = cos(eular_div[0]);
                 float cb = cos(eular_div[1]);
@@ -175,7 +176,7 @@ class HfiA9_Driver : public rclcpp::Node
                 orientation.z = z;
                 orientation.w = w;
 
-                imu_msg.header.frame_id = "imu";
+                imu_msg.header.frame_id = "imu_link";
 				imu_msg.header.stamp = this->now();
 
 				//std::cerr << std::setprecision(14) << this->now().seconds() << std::endl;

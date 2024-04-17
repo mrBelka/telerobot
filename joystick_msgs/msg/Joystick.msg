@@ -1,0 +1,13 @@
+float32 main_forw_back
+float32 main_left_right
+float32 main_rotate
+float32 aux_rotate
+bool aux_forw
+bool aux_back
+bool aux_left
+bool aux_right
+bool but_one
+bool but_two
+bool but_three
+bool but_four
+bool but_five
