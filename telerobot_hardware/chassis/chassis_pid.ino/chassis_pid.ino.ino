@@ -120,8 +120,8 @@ void loop() {
     chargePercentageProcess = ((dataNew - 11.7)/(defaultCharge - 11.7))*100;
   }
   
-  regBank.set(30009, (dataNew*10));
-  regBank.set(30010, (chargePercentageProcess));
+  regBank.set(30009, (dataNew*100));
+  regBank.set(30010, (chargePercentageProcess*100));
 
   // Set data
   motorLF.setTarget((int16_t)(regBank.get(40001)-3000)/100.f);
