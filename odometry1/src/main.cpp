@@ -162,15 +162,15 @@ class Odometry : public rclcpp::Node
 
         {
 			float lin_x = msg.linear.x;
-			if(lin_x > 0.05)
-				lin_x = 0.05;
-			if(lin_x < -0.05)
-				lin_x = -0.05;
+			if(lin_x > 0.1)
+				lin_x = 0.1;
+			if(lin_x < -0.1)
+				lin_x = -0.1;
 			float ang_z = msg.angular.z;
-			if(ang_z > 0.1)
-				ang_z = 0.1;
-			if(ang_z < -0.1)
-				ang_z = -0.1;
+			if(ang_z > 0.2)
+				ang_z = 0.2;
+			if(ang_z < -0.2)
+				ang_z = -0.2;
 
             INVERSE_DATA inv_data{lin_x, msg.linear.y, ang_z};
             FORWARD_DATA data = odom_class->GetOdometryINV(inv_data);
