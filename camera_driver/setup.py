@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'cv_driver'
+package_name = 'camera_driver'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        	'camera = cv_driver.translation_server:main'
+        	'camera_driver = cv_driver.translation_server:main'
         ],
     },
 )
