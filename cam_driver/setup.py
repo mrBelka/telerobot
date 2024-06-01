@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'cv_driver'
+package_name = 'cam_driver'
 
 setup(
     name=package_name,
@@ -14,13 +14,13 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='robot',
-    maintainer_email='akoshelev2004@yandex.ru',
-    description='Camera video translation',
+    maintainer_email='akoshelev2004@yandex,ru',
+    description='Camera video tanslation',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-        	'camera = cv_driver.translation_server:main'
+            'cam_driver = cam_driver.translation_server:main'
         ],
     },
 )

@@ -1,16 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>cv_driver</name>
+  <name>cam_driver</name>
   <version>0.0.0</version>
   <description>Camera video translation</description>
-  <maintainer email="aksohelev2004@yandex.ru">robot</maintainer>
+  <maintainer email="akoshelev2004@yandex.ru">robot</maintainer>
   <license>TODO: License declaration</license>
-
-  <depend>socket</depend>
-  <depend>cv2</depend>
-  <depend>pickle</depend>
-  <depend>struct</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
