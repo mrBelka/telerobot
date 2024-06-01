@@ -83,13 +83,13 @@ private:
 
         m_twist_pub->publish(msg_cmd_vel);
         
-        if(data[4] == false)
+        if((data[4] == false) && (pit != -19))
         	pit--;
-        if(data[5] == false)
+        if((data[5] == false) && (pit != 19))
         	pit++;
-        if(data[6] == false)
+        if((data[6] == false) && (rot != 42))
         	rot++;
-        if(data[7] == false)
+        if((data[7] == false) && (rot != -42))
         	rot--;
         	
         auto msg_head = telerobot_interfaces::msg::Head();
