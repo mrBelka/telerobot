@@ -14,12 +14,13 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='robot',
-    maintainer_email='mishklgpmi@mail.ru',
-    description='TODO: Package description',
+    maintainer_email='akoshelev2004@yandex.ru',
+    description='Sound playing',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'sound_driver = sound_driver.sound_driver:main'
         ],
     },
 )
