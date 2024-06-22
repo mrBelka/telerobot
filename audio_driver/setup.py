@@ -20,8 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'sound_client = client.client:main',
-            'sound_server = server.server:main'
+            'client = audio_driver.client:main',
+            'server = audio_driver.server:main'
         ],
     },
 )
