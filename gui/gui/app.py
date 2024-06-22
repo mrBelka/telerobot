@@ -14,9 +14,10 @@ from telerobot_interfaces.msg import Battery
 from geometry_msgs.msg import Twist
 from telerobot_interfaces.msg import Head
 
-#ограничения слайдеров!!
+
 class Communicate(QObject):
-    battery_signal = pyqtSignal(float, float)
+    battery_voltage_signal = pyqtSignal(float)
+    battery_percentage_signal = pyqtSignal(float)
     body_movement_signal = pyqtSignal(float, float)
     body_speed_signal = pyqtSignal(float, float)
     head_speed_signal = pyqtSignal(float)
@@ -32,7 +33,8 @@ class MainWindow(QMainWindow):
         self.installEventFilter(self)
         #коммуникаторы
         self.communicator = Communicate()
-        self.communicator.battery_signal.connect(self.update_battery_level)
+        self.communicator.battery_percentage_signal.connect(self.update_battery_percentage)
+        self.communicator.battery_voltage_signal.connect(self.update_battery_voltage)
 
         #body
         self.setUpBodyButtons()
@@ -90,9 +92,11 @@ class MainWindow(QMainWindow):
         self.ui.head_forward_btn.released.connect(lambda: self.move_head(0, 0))
         self.ui.head_backward_btn.released.connect(lambda: self.move_head(0, 0))
 
-    def update_battery_level(self, battery_level, battery_voltage):
-        self.ui.battery_per_label.setText(f'Battery Level: {battery_level:.2f}%')
+    def update_battery_voltage(self, battery_voltage):
         self.ui.battery_volt_label.setText(f'Battery Voltage: {battery_voltage:.2f}V')
+    def update_battery_percentage(self, battery_percantage):
+        self.ui.battery_per_label.setText(f'Battery Level: {battery_percantage:.2f}%')
+
 
     def move_body(self, l_x=0.0, a_z=0.0):
         self.communicator.body_movement_signal.emit(l_x, a_z)
@@ -115,7 +119,8 @@ class DataCollector(Node):
         timer_period = 0.5
 
 
-        self.batteryPer_sub_ = self.create_subscription(Battery, '/battery', self.battery_callback, 10)
+        self.batteryPer_sub_ = self.create_subscription(Battery, '/battery', self.battery_per_callback, 10)
+        self.batteryVolt_sub_ = self.create_subscription(Power, '/power', self.battery_volt_callback, 10)
 
         self.communicator = communicator
         self.communicator.body_movement_signal.connect(self.change_movement_components)
@@ -123,7 +128,6 @@ class DataCollector(Node):
         self.communicator.head_speed_signal.connect(self.change_head_move_speed)
         self.communicator.head_movement_signal.connect(self.change_head_movement_components)
 
-        #self.body_move_pub = BodyMovePublisher()
         ## для body паблишера
         self.body_move_pub_ = self.create_publisher(Twist, '/cmd_vel', 10)
         self.timer_body_move_pub = self.create_timer(timer_period, self.publish_body_move_message)
@@ -134,17 +138,19 @@ class DataCollector(Node):
         self.linear_speed = 1.0
 
         ## для head паблишера
-        self.head_move_pub_ = self.create_publisher(Head, 'servo_commands', 10)  #servo_commands?
+        self.head_move_pub_ = self.create_publisher(Head, 'servo_commands', 10)
         self.timer_head_move_pub = self.create_timer(timer_period, self.publish_head_move_message)
 
         self.head_speed = 1.0
-        self.rotate = 0.0   ########### ??????
+        self.rotate = 0.0
         self.pitch = 0.0
 
-    def battery_callback(self, msg):
+    def battery_per_callback(self, msg):
         battery_level = msg.i_load
-        battery_voltage = msg.i_charge
-        self.communicator.battery_signal.emit(battery_level, battery_voltage)
+        self.communicator.battery_percentage_signal.emit(battery_level)
+    def battery_volt_callback(self, msg):
+        battery_voltage = msg.voltage
+        self.communicator.battery_voltage_signal.emit(battery_voltage)
     def publish_body_move_message(self):
         msg = Twist()
         msg.linear.x = self.l_x * self.linear_speed
