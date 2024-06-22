@@ -10,6 +10,7 @@ import rclpy
 from rclpy.node import Node
 
 from telerobot_interfaces.msg import Power
+from telerobot_interfaces.msg import Battery
 from geometry_msgs.msg import Twist
 from telerobot_interfaces.msg import Head
 
@@ -79,8 +80,8 @@ class MainWindow(QMainWindow):
         self.ui.body_right_btn.pressed.connect(lambda: self.move_body(0.0, -1.0))
         self.ui.body_right_btn.released.connect(lambda: self.move_body(0.0, 0.0))
     def setUpHeadButtons(self):
-        self.ui.head_left_btn.pressed.connect( lambda: self.move_head(1, 0))  # такие ли значения относительно ориентированности системы координат
-        self.ui.head_right_btn.pressed.connect(lambda: self.move_head(-1, 0))
+        self.ui.head_left_btn.pressed.connect( lambda: self.move_head(-1, 0))  # такие ли значения относительно ориентированности системы координат
+        self.ui.head_right_btn.pressed.connect(lambda: self.move_head(1, 0))
         self.ui.head_forward_btn.pressed.connect(lambda: self.move_head(0, 1))
         self.ui.head_backward_btn.pressed.connect(lambda: self.move_head(0, -1))
 
@@ -114,7 +115,7 @@ class DataCollector(Node):
         timer_period = 0.5
 
 
-        self.batteryPer_sub_ = self.create_subscription(Power, 'power', self.battery_callback, 10)
+        self.batteryPer_sub_ = self.create_subscription(Battery, '/battery', self.battery_callback, 10)
 
         self.communicator = communicator
         self.communicator.body_movement_signal.connect(self.change_movement_components)
@@ -137,12 +138,12 @@ class DataCollector(Node):
         self.timer_head_move_pub = self.create_timer(timer_period, self.publish_head_move_message)
 
         self.head_speed = 1.0
-        self.rotate = 0  ########### ??????
-        self.pitch = 0
+        self.rotate = 0.0   ########### ??????
+        self.pitch = 0.0
 
     def battery_callback(self, msg):
-        battery_level = msg.percent
-        battery_voltage = msg.voltage
+        battery_level = msg.i_load
+        battery_voltage = msg.i_charge
         self.communicator.battery_signal.emit(battery_level, battery_voltage)
     def publish_body_move_message(self):
         msg = Twist()
@@ -163,24 +164,13 @@ class DataCollector(Node):
 
     def publish_head_move_message(self):
         msg = Head()
-        msg.motor_pitch = self.pitch                 ###как округлять
-        msg.motor_rotate = self.rotate
+        msg.motor_pitch = round(self.pitch * self.head_speed)                ###как округлять
+        msg.motor_rotate = round(self.rotate * self.head_speed)
         self.head_move_pub_.publish(msg)
 
     def change_head_movement_components(self, rotate, pitch):
-        
-        self.rotate += round(rotate * self.head_speed)
-        if self.rotate > 42:
-            self.rotate = 42
-        elif self.rotate < -42:
-            self.rotate = -42
-            
-        self.pitch += round(pitch * self.head_speed)
-        if self.pitch > 19:
-            self.pitch = 19
-        elif self.pitch < -19:
-            self.pitch = -19
-
+        self.rotate = rotate
+        self.pitch = pitch
 def ros_spin_loop(Node):
     rclpy.spin(Node)
 
