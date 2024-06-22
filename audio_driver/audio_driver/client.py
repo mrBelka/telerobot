@@ -6,7 +6,7 @@ def main(args=None):
     CHANNELS = 1
     RATE = 44100
 
-    # Create socket
+    # Socket create
     client_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     host_ip = '192.168.1.139'
     port = 1234
@@ -21,7 +21,7 @@ def main(args=None):
 
     while True:
         while len(data) < payload_size:
-            packet = client_socket.recv(4*1024)  # 4K
+            packet = client_socket.recv(4*1024)
             if not packet:
                 break
             data += packet
