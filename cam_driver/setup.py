@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'cam_driver = cam_driver.translation_server:main'
+            'server = cam_driver.server:main',
+            'client = cam_driver.client:main'
         ],
     },
 )
