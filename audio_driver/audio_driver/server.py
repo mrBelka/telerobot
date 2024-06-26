@@ -7,6 +7,10 @@ class AudioServer(Node):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = ip
         self.port = port
+        self.CHUNK = 1024
+        self.FORMAT = pyaudio.paInt16
+        self.CHANNELS = 1
+        self.RATE = 44100
 
         try:
             self.server_socket.bind((self.host_ip, self.port))
@@ -16,26 +20,23 @@ class AudioServer(Node):
             while True:
                 client_socket, addr = self.server_socket.accept()
                 self.get_logger().info(f"Got connection from: {addr}")
-
                 if client_socket:
                     p = pyaudio.PyAudio()
-                    stream_in = p.open(format=pyaudio.paInt16,
-                                       channels=1,
-                                       rate=44100,
+                    stream_in = p.open(format=self.FORMAT,
+                                       channels=self.CHANNELS,
+                                       rate=self.RATE,
                                        input=True,
-                                       frames_per_buffer=1024)
+                                       frames_per_buffer=self.CHUNK)
 
                     try:
                         while True:
-                            data = client_socket.recv(1024)
-                            if not data:
-                                break
-                            a = pickle.loads(data)
-                            msg = struct.pack("Q", len(a)) + a
-                            stream_in.write(msg)
+                            data = stream_in.read(self.CHUNK)
+                            a = pickle.dumps(data)
+                            message = struct.pack("Q", len(a)) + a
+                            client_socket.sendall(message)
 
                     except Exception as e:
-                        self.get_logger().error(f"Data receiving error: {e}")
+                        self.get_logger().error(f"Data sending error: {e}")
 
                     finally:
                         stream_in.stop_stream()
@@ -45,9 +46,6 @@ class AudioServer(Node):
 
         except Exception as e:
             self.get_logger().error(f"Server start error: {e}")
-
-        finally:
-            self.server_socket.close()
 
 def main(args=None):
     rclpy.init(args=args)
