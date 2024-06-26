@@ -51,7 +51,7 @@ class AudioServer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ip = '192.168.1.62'
+    ip = '192.168.1.139'
     port = 1234
     audio_server = AudioServer(ip, port)
     rclpy.spin(audio_server)
