@@ -1,58 +1,62 @@
-import socket, pyaudio, pickle, struct
+import socket, pyaudio, pickle, struct, rclpy
+from rclpy.node import Node
+
+class AudioServer(Node):
+    def __init__(self, ip, port):
+        super().__init__('audio_server')
+        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.host_ip = ip
+        self.port = port
+
+        try:
+            self.server_socket.bind((self.host_ip, self.port))
+            self.server_socket.listen(5)
+            self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
+
+            while True:
+                client_socket, addr = self.server_socket.accept()
+                self.get_logger().info(f"Got connection from: {addr}")
+
+                if client_socket:
+                    p = pyaudio.PyAudio()
+                    stream_in = p.open(format=pyaudio.paInt16,
+                                       channels=1,
+                                       rate=44100,
+                                       input=True,
+                                       frames_per_buffer=1024)
+
+                    try:
+                        while True:
+                            data = client_socket.recv(1024)
+                            if not data:
+                                break
+                            a = pickle.loads(data)
+                            msg = struct.pack("Q", len(a)) + a
+                            stream_in.write(msg)
+
+                    except Exception as e:
+                        self.get_logger().error(f"Data receiving error: {e}")
+
+                    finally:
+                        stream_in.stop_stream()
+                        stream_in.close()
+                        client_socket.close()
+                        p.terminate()
+
+        except Exception as e:
+            self.get_logger().error(f"Server start error: {e}")
+
+        finally:
+            self.server_socket.close()
 
 def main(args=None):
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 44100
-
-    # Socket create
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host_name = socket.gethostname()
-    host_ip = '192.168.1.139'
-    print('HOST IP:', host_ip)
+    rclpy.init(args=args)
+    ip = '192.168.1.62'
     port = 1234
-    socket_address = (host_ip,port)
-
-    try:
-        # Socket bind
-        server_socket.bind(socket_address)
-
-        # Socket listen
-        server_socket.listen(5)
-        print("LISTENING AT:", socket_address)
-
-        # Socket accept
-        while True:
-            client_socket,addr = server_socket.accept()
-            print('GOT CONNECTION FROM:', addr)
-            if client_socket:
-                p = pyaudio.PyAudio()
-                
-                stream_in = p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        input=True,
-                        frames_per_buffer=CHUNK)
-                
-                try:
-                    while True:
-                        data = stream_in.read(CHUNK)
-                        a = pickle.dumps(data)
-                        message = struct.pack("Q", len(a))+a
-                        client_socket.sendall(message)
-                        
-                except Exception as e:
-                    print(f"Data sending error: {e}")
-
-                finally:
-                    stream_in.stop_stream()
-                    stream_in.close()
-                    client_socket.close()
-                    p.terminate()
-
-    except Exception as e:
-        print(f"Server start error: {e}")
+    audio_server = AudioServer(ip, port)
+    rclpy.spin(audio_server)
+    audio_server.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

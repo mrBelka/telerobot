@@ -1,56 +1,62 @@
-import socket, pyaudio, pickle, struct
+import socket, pyaudio, pickle, struct, rclpy
+from rclpy.node import Node
+
+class AudioClient(Node):
+    def __init__(self, ip, port):
+        super().__init__('audio_client')
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.host_ip = ip
+        self.port = port
+
+        try:
+            self.client_socket.connect((self.host_ip, self.port))
+            self.get_logger().info(f"Connected to: {self.host_ip}:{self.port}")
+            data = b""
+            payload_size = struct.calcsize("Q")
+            p = pyaudio.PyAudio()
+            stream_out = p.open(format=pyaudio.paInt16,
+                                channels=1,
+                                rate=44100,
+                                output=True)
+
+            while True:
+                while len(data) < payload_size:
+                    packet = self.client_socket.recv(4*1024)
+                    if not packet:
+                        break
+                    data += packet
+                    
+                if len(data) >= payload_size:
+                    packed_msg_size = data[:payload_size]
+                    data = data[payload_size:]
+                    msg_size = struct.unpack("Q", packed_msg_size)[0]
+                    
+                    while len(data) < msg_size:
+                        data += self.client_socket.recv(4*1024)
+                        
+                    frame_data = data[:msg_size]
+                    data = data[msg_size:]
+                    frame = pickle.loads(frame_data)
+                    if frame is not None:
+                        stream_out.write(frame)            
+
+        except Exception as e:
+            self.get_logger().error(f"Server connection error: {e}")
+
+        finally:
+            stream_out.stop_stream()
+            stream_out.close()
+            self.client_socket.close()
+            p.terminate()
 
 def main(args=None):
-    CHUNK = 1024
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 44100
-
-    # Socket create
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host_ip = '192.168.1.139'
+    rclpy.init(args=args)
+    ip = '192.168.1.62'
     port = 1234
+    audio_client = AudioClient(ip, port)
+    rclpy.spin(audio_client)
+    audio_client.destroy_node()
+    rclpy.shutdown()
 
-    try:
-        client_socket.connect((host_ip,port))
-        data = b""
-        payload_size = struct.calcsize("Q")
-        p = pyaudio.PyAudio()
-        stream_out = p.open(format=FORMAT,
-                        channels=CHANNELS,
-                        rate=RATE,
-                        output=True)
-
-        while True:
-            while len(data) < payload_size:
-                packet = client_socket.recv(4*1024)
-                if not packet:
-                    break
-                data += packet
-                
-            if len(data) >= payload_size:
-                packed_msg_size = data[:payload_size]
-                data = data[payload_size:]
-                msg_size = struct.unpack("Q", packed_msg_size)[0]
-                
-                while len(data) < msg_size:
-                    data += client_socket.recv(4*1024)
-                    
-                frame_data = data[:msg_size]
-                data = data[msg_size:]
-                frame = pickle.loads(frame_data)
-                if frame is not None:
-                    stream_out.write(frame)
-
-        stream_out.stop_stream()
-        stream_out.close()
-
-    except Exception as e:
-        print(f"Server connection error: {e}")
-
-    finally:
-        client_socket.close()
-        p.terminate()
-
-if __name__ == 'main':
+if __name__ == '__main__':
     main()
