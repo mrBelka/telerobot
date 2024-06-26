@@ -79,6 +79,7 @@ private:
         auto msg_cmd_vel = geometry_msgs::msg::Twist();
 
         msg_cmd_vel.linear.x = -0.5f*normalize(data[0] - 500, 370, 50);
+        msg_cmd_vel.linear.y = -0.5f*normalize(data[1] - 500, 370, 50);
         msg_cmd_vel.angular.z = -normalize(data[2] - 500, 370, 100);
 
         m_twist_pub->publish(msg_cmd_vel);
