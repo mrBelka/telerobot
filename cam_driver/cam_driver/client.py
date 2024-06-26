@@ -1,8 +1,5 @@
-import rclpy
+import socket, cv2, pickle, struct, rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import socket, cv2, pickle, struct
 
 class VideoClient(Node):
     def __init__(self, ip, port):
@@ -13,7 +10,7 @@ class VideoClient(Node):
 
         try:
             self.client_socket.connect((self.host_ip, self.port))
-            self.get_logger().info(f"CONNECTED TO: {self.host_ip}:{self.port}")
+            self.get_logger().info(f"Connected to: {self.host_ip}:{self.port}")
 
             data = b""
             payload_size = struct.calcsize("Q")
@@ -38,7 +35,7 @@ class VideoClient(Node):
                         data = data[msg_size:]
                         frame = pickle.loads(frame_data)
                         if frame is not None:
-                            cv2.imshow("RECEIVING VIDEO", frame)
+                            cv2.imshow("Receiving video", frame)
                             key = cv2.waitKey(1) & 0xFF
                             if key == ord('q'):
                                 break
