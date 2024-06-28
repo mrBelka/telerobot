@@ -1,5 +1,6 @@
 import socket, cv2, pickle, struct, rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 
 class VideoClient(Node):
     def __init__(self, ip, port):
@@ -11,6 +12,12 @@ class VideoClient(Node):
         try:
             self.client_socket.connect((self.host_ip, self.port))
             self.get_logger().info(f"Connected to: {self.host_ip}:{self.port}")
+            self.subscription = self.create_subscription(
+            String,
+            'cam_connection',
+            self.listener_callback,
+            10)
+            self.subscription
 
             data = b""
             payload_size = struct.calcsize("Q")
@@ -45,6 +52,9 @@ class VideoClient(Node):
 
         finally:
             self.client_socket.close()
+
+    def listener_callback(self, msg):
+        self.get_logger().info(msg.data)
 
 def main(args=None):
     rclpy.init(args=args)
