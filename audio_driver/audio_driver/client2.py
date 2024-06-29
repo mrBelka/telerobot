@@ -12,11 +12,11 @@ class AudioClient(Node):
 
         # Socket create
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host_ip = '192.168.1.62'
-        port = 1234
+        self.host_ip = ip
+        self.port = port
 
         try:
-            self.client_socket.connect((host_ip, port))
+            self.client_socket.connect((self.host_ip, self.port))
             data = b""
             payload_size = struct.calcsize("Q")
             p = pyaudio.PyAudio()
@@ -66,7 +66,7 @@ class AudioClient(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ip = '192.168.1.139'
+    ip = '192.168.1.62'
     port = 1234
     audio_client = AudioClient(ip, port)
     rclpy.spin(audio_client)
