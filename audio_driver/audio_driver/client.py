@@ -2,9 +2,9 @@ import socket, pyaudio, pickle, struct, rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-class AudioClientNode(Node):
+class AudioClient(Node):
     def __init__(self, ip, port):
-        super().__init__('audio_client_node')
+        super().__init__('audio_client')
 
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
@@ -26,7 +26,7 @@ class AudioClientNode(Node):
                                 output=True)
             self.subscription = self.create_subscription(
                 String,
-                'cam_connection',
+                'audio_connection',
                 self.listener_callback,
                 10)
             self.subscription
@@ -68,9 +68,9 @@ def main(args=None):
     rclpy.init(args=args)
     ip = '192.168.1.139'
     port = 1234
-    audio_client_node = AudioClientNode(ip, port)
-    rclpy.spin(audio_client_node)
-    audio_client_node.destroy_node()
+    audio_client = AudioClient(ip, port)
+    rclpy.spin(audio_client)
+    audio_client.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
