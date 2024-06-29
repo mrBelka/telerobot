@@ -14,8 +14,6 @@ class VideoServer(Node):
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
             self.publisher_ = self.create_publisher(String, 'cam_connection', 10)
-            timer_period = 0.5  # seconds
-            self.timer = self.create_timer(timer_period, self.timer_callback)
 
             while True:
                 client_socket, addr = self.server_socket.accept()
@@ -44,11 +42,6 @@ class VideoServer(Node):
 
         except Exception as e:
             self.get_logger().error(f"Server start error: {e}")
-
-    def timer_callback(self):
-        msg = String()
-        msg.data = f"{self.host_ip}:{self.port}"
-        self.publisher_.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)

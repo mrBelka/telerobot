@@ -13,10 +13,10 @@ class VideoClient(Node):
             self.client_socket.connect((self.host_ip, self.port))
             self.get_logger().info(f"Connected to: {self.host_ip}:{self.port}")
             self.subscription = self.create_subscription(
-            String,
-            'cam_connection',
-            self.listener_callback,
-            10)
+                String,
+                'cam_connection',
+                self.listener_callback,
+                10)
             self.subscription
 
             data = b""
