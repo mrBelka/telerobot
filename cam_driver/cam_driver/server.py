@@ -2,9 +2,9 @@ import socket, cv2, pickle, struct, rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-class VideoServer(Node):
+class CamServer(Node):
     def __init__(self, ip, port):
-        super().__init__('video_server')
+        super().__init__('cam_server')
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = ip
         self.port = port
@@ -47,9 +47,9 @@ def main(args=None):
     rclpy.init(args=args)
     ip = '192.168.1.139'
     port = 9999
-    video_server = VideoServer(ip, port)
-    rclpy.spin(video_server)
-    video_server.destroy_node()
+    cam_server = CamServer(ip, port)
+    rclpy.spin(cam_server)
+    cam_server.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
