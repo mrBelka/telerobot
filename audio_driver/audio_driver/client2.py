@@ -4,7 +4,7 @@ from std_msgs.msg import String
 
 class AudioClient(Node):
     def __init__(self, ip, port):
-        super().__init__('audio_client')
+        super().__init__('audio_client_2')
 
         FORMAT = pyaudio.paInt16
         CHANNELS = 1
@@ -12,7 +12,7 @@ class AudioClient(Node):
 
         # Socket create
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host_ip = '192.168.1.139'
+        host_ip = '192.168.1.62'
         port = 1234
 
         try:
@@ -26,7 +26,7 @@ class AudioClient(Node):
                                 output=True)
             self.subscription = self.create_subscription(
                 String,
-                'audio_connection',
+                'audio_connection_2',
                 self.listener_callback,
                 10)
             self.subscription

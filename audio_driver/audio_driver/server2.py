@@ -4,7 +4,7 @@ from std_msgs.msg import String
 
 class AudioServer(Node):
     def __init__(self, ip, port):
-        super().__init__('audio_server')
+        super().__init__('audio_server_2')
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = ip
         self.port = port
@@ -17,7 +17,7 @@ class AudioServer(Node):
             self.server_socket.bind((self.host_ip, self.port))
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
-            self.publisher_ = self.create_publisher(String, 'audio_connection', 10)
+            self.publisher_ = self.create_publisher(String, 'audio_connection_2', 10)
 
             while True:
                 client_socket, addr = self.server_socket.accept()
@@ -51,7 +51,7 @@ class AudioServer(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ip = '192.168.1.139'
+    ip = '192.168.1.62'
     port = 1234
     audio_server = AudioServer(ip, port)
     rclpy.spin(audio_server)
