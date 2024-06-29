@@ -1,5 +1,6 @@
 import socket, pyaudio, pickle, struct, rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 
 class AudioServer(Node):
     def __init__(self, ip, port):
@@ -16,6 +17,7 @@ class AudioServer(Node):
             self.server_socket.bind((self.host_ip, self.port))
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
+            self.publisher_ = self.create_publisher(String, 'audio_connection', 10)
 
             while True:
                 client_socket, addr = self.server_socket.accept()

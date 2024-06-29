@@ -1,5 +1,6 @@
 import socket, pyaudio, pickle, struct, rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 
 class AudioClientNode(Node):
     def __init__(self, ip, port):
@@ -23,6 +24,12 @@ class AudioClientNode(Node):
                                 channels=CHANNELS,
                                 rate=RATE,
                                 output=True)
+            self.subscription = self.create_subscription(
+                String,
+                'cam_connection',
+                self.listener_callback,
+                10)
+            self.subscription
 
             while True:
                 while len(data) < payload_size:
@@ -53,6 +60,9 @@ class AudioClientNode(Node):
             stream_out.close()
             self.client_socket.close()
             p.terminate()
+
+    def listener_callback(self, msg):
+        self.get_logger().info(msg.data)
 
 def main(args=None):
     rclpy.init(args=args)
