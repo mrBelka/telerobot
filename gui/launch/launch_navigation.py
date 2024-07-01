@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import PathJoinSubstitution, TextSubstitution
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
@@ -22,10 +23,15 @@ def generate_launch_description():
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
-                FindPackageShare("linorobot2_navigation"),
-                '/launch',
-                '/slam.launch.py'
-            ])
+                PathJoinSubstitution([
+                    FindPackageShare('linorobot2_navigation'),
+                    'launch',
+                    'slam.launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'rviz': 'false'
+            }.items()
         ),
         Node(
             package='robot_localization',

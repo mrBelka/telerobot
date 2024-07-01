@@ -25,9 +25,9 @@ class UiApp(object):
         self.body_control_layout.setContentsMargins(0, 0, 0, 0)
         self.body_control_layout.setObjectName("body_control_layout")
 
-        self.label_move_body = QtWidgets.QLabel(self.body_control_widget)
+        '''self.label_move_body = QtWidgets.QLabel(self.body_control_widget)
         self.label_move_body.setObjectName("label_move_body")
-        self.body_control_layout.addWidget(self.label_move_body, 7, 0, 1, 1)
+        self.body_control_layout.addWidget(self.label_move_body, 7, 0, 1, 1)'''
 
         self.body_forward_btn = QtWidgets.QPushButton(self.body_control_widget)
         self.body_forward_btn.setMaximumSize(QtCore.QSize(16777215, 16777208))
@@ -39,6 +39,11 @@ class UiApp(object):
         self.body_left_btn.setObjectName("body_left_btn")
         self.body_control_layout.addWidget(self.body_left_btn, 8, 0, 1, 1)
 
+        self.body_rotate_left_btn = QtWidgets.QPushButton(self.body_control_widget)
+        self.body_rotate_left_btn.setMaximumSize(QtCore.QSize(16777215, 16777208))
+        self.body_rotate_left_btn.setObjectName("body_rotate_left_btn")
+        self.body_control_layout.addWidget(self.body_rotate_left_btn, 7, 0, 1, 1)
+
         self.body_backward_btn = QtWidgets.QPushButton(self.body_control_widget)
         self.body_backward_btn.setMaximumSize(QtCore.QSize(16777215, 16777208))
         self.body_backward_btn.setObjectName("body_backward_btn")
@@ -48,6 +53,11 @@ class UiApp(object):
         self.body_right_btn.setMaximumSize(QtCore.QSize(16777215, 16777208))
         self.body_right_btn.setObjectName("body_right_btn")
         self.body_control_layout.addWidget(self.body_right_btn, 8, 2, 1, 1)
+
+        self.body_rotate_right_btn = QtWidgets.QPushButton(self.body_control_widget)
+        self.body_rotate_right_btn.setMaximumSize(QtCore.QSize(16777215, 16777208))
+        self.body_rotate_right_btn.setObjectName("body_rotate_right_btn")
+        self.body_control_layout.addWidget(self.body_rotate_right_btn, 7, 2, 1, 1)
 
         self.label_body_linear_speed = QtWidgets.QLabel(self.body_control_widget)
         self.label_body_linear_speed.setMaximumSize(QtCore.QSize(16777215, 16))
@@ -139,11 +149,13 @@ class UiApp(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label_body_linear_speed.setText(_translate("MainWindow", "Linear speed: 1.0       "))
-        self.body_right_btn.setText(_translate("MainWindow", "Rotate Right: D"))
-        self.label_move_body.setText(_translate("MainWindow", "Move body"))
+        self.body_right_btn.setText(_translate("MainWindow", "Right: D"))
+        self.body_rotate_right_btn.setText(_translate("MainWindow", "Rot R: E"))
+        self.body_rotate_left_btn.setText(_translate("MainWindow", "Rot L: Q"))
+        #.label_move_body.setText(_translate("MainWindow", "Move body"))
         self.body_backward_btn.setText(_translate("MainWindow", "Backward: S"))
         self.body_forward_btn.setText(_translate("MainWindow", "Forward: W"))
-        self.body_left_btn.setText(_translate("MainWindow", "Rotate Left: A"))
+        self.body_left_btn.setText(_translate("MainWindow", "Left: A"))
         self.label_body_angular_speed.setText(_translate("MainWindow", "Angular speed: 1.0      "))
         self.head_left_btn.setText(_translate("MainWindow", "Left: L"))
         self.head_forward_btn.setText(_translate("MainWindow", "Up: I"))

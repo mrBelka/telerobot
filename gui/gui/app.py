@@ -18,7 +18,7 @@ from telerobot_interfaces.msg import Head
 class Communicate(QObject):
     battery_voltage_signal = pyqtSignal(float)
     battery_percentage_signal = pyqtSignal(float)
-    body_movement_signal = pyqtSignal(float, float)
+    body_movement_signal = pyqtSignal(float, float, float) #lx ly az
     body_speed_signal = pyqtSignal(float, float)
     head_speed_signal = pyqtSignal(float)
     head_movement_signal = pyqtSignal(int, int)
@@ -73,14 +73,19 @@ class MainWindow(QMainWindow):
         return super().eventFilter(obj, event)
 
     def setUpBodyButtons(self):
-        self.ui.body_forward_btn.pressed.connect(lambda: self.move_body(1.0, 0.0))
-        self.ui.body_forward_btn.released.connect(lambda: self.move_body(0.0, 0.0))
-        self.ui.body_backward_btn.pressed.connect(lambda: self.move_body(-1.0, 0.0))
-        self.ui.body_backward_btn.released.connect(lambda: self.move_body(0.0, 0.0))
-        self.ui.body_left_btn.pressed.connect(lambda: self.move_body(0.0, 1.0))
-        self.ui.body_left_btn.released.connect(lambda: self.move_body(0.0, 0.0))
-        self.ui.body_right_btn.pressed.connect(lambda: self.move_body(0.0, -1.0))
-        self.ui.body_right_btn.released.connect(lambda: self.move_body(0.0, 0.0))
+        self.ui.body_forward_btn.pressed.connect(lambda: self.move_body(l_x=1.0))
+        self.ui.body_forward_btn.released.connect(lambda: self.move_body())
+        self.ui.body_backward_btn.pressed.connect(lambda: self.move_body(l_x=-1.0))
+        self.ui.body_backward_btn.released.connect(lambda: self.move_body())
+        self.ui.body_left_btn.pressed.connect(lambda: self.move_body(l_y=1.0))
+        self.ui.body_left_btn.released.connect(lambda: self.move_body())
+        self.ui.body_right_btn.pressed.connect(lambda: self.move_body(l_y=-1.0))
+        self.ui.body_right_btn.released.connect(lambda: self.move_body())
+        self.ui.body_rotate_right_btn.pressed.connect(lambda: self.move_body(a_z=1.0))
+        self.ui.body_rotate_right_btn.released.connect(lambda: self.move_body())
+        self.ui.body_rotate_left_btn.pressed.connect(lambda: self.move_body(a_z=-1.0))
+        self.ui.body_rotate_left_btn.released.connect(lambda: self.move_body())
+
     def setUpHeadButtons(self):
         self.ui.head_left_btn.pressed.connect( lambda: self.move_head(-1, 0))  # такие ли значения относительно ориентированности системы координат
         self.ui.head_right_btn.pressed.connect(lambda: self.move_head(1, 0))
@@ -98,8 +103,8 @@ class MainWindow(QMainWindow):
         self.ui.battery_per_label.setText(f'Battery Level: {battery_percantage:.2f}%')
 
 
-    def move_body(self, l_x=0.0, a_z=0.0):
-        self.communicator.body_movement_signal.emit(l_x, a_z)
+    def move_body(self, l_x=0.0, l_y=0.0, a_z=0.0):
+        self.communicator.body_movement_signal.emit(l_x, l_y, a_z)
 
     def move_head(self, rotate=0, pitch=0):
         self.communicator.head_movement_signal.emit(rotate, pitch)
@@ -133,6 +138,7 @@ class DataCollector(Node):
         self.timer_body_move_pub = self.create_timer(timer_period, self.publish_body_move_message)
 
         self.l_x = 0.0
+        self.l_y = 0.0
         self.a_z = 0.0
         self.angular_speed = 1.0
         self.linear_speed = 1.0
@@ -154,6 +160,7 @@ class DataCollector(Node):
     def publish_body_move_message(self):
         msg = Twist()
         msg.linear.x = self.l_x * self.linear_speed
+        msg.linear.y = self.l_y * self.linear_speed
         msg.angular.z = self.a_z * self.angular_speed
         self.body_move_pub_.publish(msg)
 
@@ -164,8 +171,9 @@ class DataCollector(Node):
     def change_head_move_speed(self, speed):
         self.head_speed = speed
 
-    def change_movement_components(self, l_x=0.0, a_z=0.0):
+    def change_movement_components(self, l_x=0.0, l_y=0.0, a_z=0.0):
         self.l_x = l_x
+        self.l_y = l_y
         self.a_z = a_z
 
     def publish_head_move_message(self):
