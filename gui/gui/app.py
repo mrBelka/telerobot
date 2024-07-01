@@ -63,9 +63,12 @@ class MainWindow(QMainWindow):
             elif key == QtCore.Qt.Key_K: self.ui.head_backward_btn.pressed.emit()
             elif key == QtCore.Qt.Key_J: self.ui.head_left_btn.pressed.emit()
             elif key == QtCore.Qt.Key_L: self.ui.head_right_btn.pressed.emit()
+            elif key == QtCore.Qt.Key_Q: self.ui.body_rotate_left_btn.pressed.emit()
+            elif key == QtCore.Qt.Key_E: self.ui.body_rotate_right_btn.pressed.emit()
+
         elif event.type() == QtCore.QEvent.KeyRelease:
             key = event.key()
-            if key in (QtCore.Qt.Key_W, QtCore.Qt.Key_S, QtCore.Qt.Key_A, QtCore.Qt.Key_D):
+            if key in (QtCore.Qt.Key_W, QtCore.Qt.Key_S, QtCore.Qt.Key_A, QtCore.Qt.Key_D, QtCore.Qt.Key_Q, QtCore.Qt.Key_E):
                 self.ui.body_forward_btn.released.emit()
             elif key in (QtCore.Qt.Key_I, QtCore.Qt.Key_J, QtCore.Qt.Key_K, QtCore.Qt.Key_L):
                 self.ui.head_forward_btn.released.emit()
@@ -81,9 +84,9 @@ class MainWindow(QMainWindow):
         self.ui.body_left_btn.released.connect(lambda: self.move_body())
         self.ui.body_right_btn.pressed.connect(lambda: self.move_body(l_y=-1.0))
         self.ui.body_right_btn.released.connect(lambda: self.move_body())
-        self.ui.body_rotate_right_btn.pressed.connect(lambda: self.move_body(a_z=1.0))
+        self.ui.body_rotate_right_btn.pressed.connect(lambda: self.move_body(a_z=-1.0))
         self.ui.body_rotate_right_btn.released.connect(lambda: self.move_body())
-        self.ui.body_rotate_left_btn.pressed.connect(lambda: self.move_body(a_z=-1.0))
+        self.ui.body_rotate_left_btn.pressed.connect(lambda: self.move_body(a_z=1.0))
         self.ui.body_rotate_left_btn.released.connect(lambda: self.move_body())
 
     def setUpHeadButtons(self):
