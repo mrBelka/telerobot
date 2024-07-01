@@ -8,9 +8,8 @@ def generate_launch_description():
     wheel_driver_node = Node(
         package='wheel_driver',
         executable='wheel_driver',
-        name='wheel_driver',
-        output='screen',
-        parameters=[{'dev': '/dev/ttyUSB1'}]
+        name='wheel_driver_node',
+        arguments=['--ros-args', '-p', 'dev:=/dev/ttyUSB1']
     )
     odometry = Node(
         package ='odometry1',
@@ -18,13 +17,5 @@ def generate_launch_description():
         name='odometry1',
         output = 'screen'
     )
-    battery_controller = Node(
-        package='battery_controller',
-        executable='battery_controller',
-        name='battery_controller_node',
-        output='screen',
-        parameters=[{'dev': '/dev/ttyUSB1'}]
-    )
 
-
-    return LaunchDescription([wheel_driver_node, odometry, battery_controller])
+    return LaunchDescription([wheel_driver_node, odometry])
