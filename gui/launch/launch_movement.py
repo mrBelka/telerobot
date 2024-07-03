@@ -7,7 +7,7 @@ def generate_launch_description():
         package='wheel_driver',
         executable='wheel_driver',
         name='wheel_driver_node',
-        arguments=['--ros-args', '-p', 'dev:=/dev/ttyUSB1']
+        arguments=['--ros-args', '-p', 'dev:=/dev/ttyUSB0']
     )
     odometry = Node(
         package ='odometry1',

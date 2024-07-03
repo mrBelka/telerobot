@@ -12,8 +12,8 @@ class AudioClient(Node):
 
         # Socket create
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        host_ip = '192.168.1.139'
-        port = 1234
+        host_ip = ip
+        port = port
 
         try:
             self.client_socket.connect((host_ip, port))
@@ -66,7 +66,7 @@ class AudioClient(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ip = '192.168.1.139'
+    ip = '192.168.1.89'
     port = 1234
     audio_client = AudioClient(ip, port)
     rclpy.spin(audio_client)
