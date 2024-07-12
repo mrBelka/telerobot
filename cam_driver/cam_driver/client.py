@@ -58,7 +58,7 @@ class CamClient(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    ip = '192.168.1.89'
+    ip = '192.168.1.139'
     port = 9999
     cam_client = CamClient(ip, port)
     rclpy.spin(cam_client)
