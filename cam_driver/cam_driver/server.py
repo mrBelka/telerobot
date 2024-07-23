@@ -1,6 +1,12 @@
-import socket, cv2, pickle, struct, rclpy
+import socket
+import cv2
+import pickle
+import struct
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
 
 class CamServer(Node):
     def __init__(self, ip, port):
@@ -8,12 +14,13 @@ class CamServer(Node):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = ip
         self.port = port
+        self.bridge = CvBridge()
 
         try:
             self.server_socket.bind((self.host_ip, self.port))
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
-            self.publisher_ = self.create_publisher(String, 'cam_connection', 10)
+            self.publisher_ = self.create_publisher(Image, 'image', 10)  # Изменен тип на Image
 
             while True:
                 client_socket, addr = self.server_socket.accept()
@@ -23,10 +30,19 @@ class CamServer(Node):
                     vid = cv2.VideoCapture(0)
                     try:
                         while vid.isOpened():
-                            img, frame = vid.read()
+                            ret, frame = vid.read()
+                            
+                            if not ret:
+                                break
+
+                            ros_image = self.bridge.cv2_to_imgmsg(frame, encoding="bgr8")
+
+                            self.publisher_.publish(ros_image)
+
                             a = pickle.dumps(frame)
                             message = struct.pack("Q", len(a)) + a
                             client_socket.sendall(message)
+
                             key = cv2.waitKey(1) & 0xFF
                             if key == ord('q'):
                                 client_socket.close()
