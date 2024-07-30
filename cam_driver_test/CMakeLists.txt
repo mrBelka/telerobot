@@ -19,9 +19,18 @@ find_package(image_transport REQUIRED)
 find_package(OpenCV REQUIRED)
 
 add_executable(server src/server.cpp)
+add_executable(client src/client.cpp)
 
-# Добавлены зависимости
 ament_target_dependencies(server
+  rclcpp
+  std_msgs
+  sensor_msgs
+  cv_bridge
+  image_transport
+  OpenCV
+)
+
+ament_target_dependencies(client
   rclcpp
   std_msgs
   sensor_msgs
@@ -32,6 +41,7 @@ ament_target_dependencies(server
 
 install(TARGETS
   server
+  client
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

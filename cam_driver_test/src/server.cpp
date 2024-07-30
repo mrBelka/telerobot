@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 class MinimalPublisher : public rclcpp::Node
 {
 public:
-    MinimalPublisher() : Node("minimal_publisher"), count_(0)
+    MinimalPublisher() : Node("camera_server"), count_(0)
     {
         publisher_ = this->create_publisher<sensor_msgs::msg::Image>("camera/image", 10);
         timer_ = this->create_wall_timer(33ms, std::bind(&MinimalPublisher::timer_callback, this));
@@ -42,7 +42,7 @@ private:
         sensor_msgs::msg::Image::SharedPtr msg = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", img).toImageMsg();
 
         publisher_->publish(*msg);
-        std::cout << "Published image!" << std::endl;
+        std::cout << "Published image" << std::endl;
     }
 
     rclcpp::TimerBase::SharedPtr timer_;
