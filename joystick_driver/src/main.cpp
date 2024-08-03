@@ -79,17 +79,18 @@ private:
         auto msg_cmd_vel = geometry_msgs::msg::Twist();
 
         msg_cmd_vel.linear.x = -0.5f*normalize(data[0] - 500, 370, 50);
+        msg_cmd_vel.linear.y = -0.5f*normalize(data[1] - 500, 370, 50);
         msg_cmd_vel.angular.z = -normalize(data[2] - 500, 370, 100);
 
         m_twist_pub->publish(msg_cmd_vel);
         
-        if(data[4] == false)
+        if((data[4] == false) && (pit != -19))
         	pit--;
-        if(data[5] == false)
+        if((data[5] == false) && (pit != 19))
         	pit++;
-        if(data[6] == false)
+        if((data[6] == false) && (rot != 42))
         	rot++;
-        if(data[7] == false)
+        if((data[7] == false) && (rot != -42))
         	rot--;
         	
         auto msg_head = telerobot_interfaces::msg::Head();
