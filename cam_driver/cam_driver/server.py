@@ -8,14 +8,18 @@ class CamServer(Node):
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.host_ip = ip
         self.port = port
+        msg = String()
 
         try:
+            self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.server_socket.bind((self.host_ip, self.port))
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
             self.publisher_ = self.create_publisher(String, 'cam_connection', 10)
 
             while True:
+                msg.data = "Not connected"
+                self.publisher_.publish(msg)
                 client_socket, addr = self.server_socket.accept()
                 self.get_logger().info(f"Got connection from: {addr}")
 
@@ -23,6 +27,8 @@ class CamServer(Node):
                     vid = cv2.VideoCapture(0)
                     try:
                         while vid.isOpened():
+                            msg.data = f"Connected: {self.host_ip}:{self.port}"
+                            self.publisher_.publish(msg)
                             img, frame = vid.read()
                             a = pickle.dumps(frame)
                             message = struct.pack("Q", len(a)) + a
