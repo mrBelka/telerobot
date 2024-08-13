@@ -12,14 +12,18 @@ class AudioServer(Node):
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 44100
+        msg = String()
 
         try:
+            self.server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.server_socket.bind((self.host_ip, self.port))
             self.server_socket.listen(5)
             self.get_logger().info(f"Listening at: {self.host_ip}:{self.port}")
             self.publisher_ = self.create_publisher(String, 'audio_connection_1', 10)
 
             while True:
+                msg.data = "Not connected"
+                self.publisher_.publish(msg)
                 client_socket, addr = self.server_socket.accept()
                 self.get_logger().info(f"Got connection from: {addr}")
                 if client_socket:
@@ -32,6 +36,8 @@ class AudioServer(Node):
 
                     try:
                         while True:
+                            msg.data = f"Connected: {self.host_ip}:{self.port}"
+                            self.publisher_.publish(msg)
                             data = stream_in.read(self.CHUNK)
                             a = pickle.dumps(data)
                             message = struct.pack("Q", len(a)) + a
