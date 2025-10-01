@@ -27,14 +27,20 @@ namespace robot::containers
         }
 
         /** Insert a copy of the given element in the buffer.
-         * \exception std::out_of_range If the buffer run out of space.
+         * exception std::out_of_range If the buffer run out of space.
          */
         void push(T d)
         {
             auto new_idx = m_next_write + 1;
             if (new_idx == m_size) new_idx = 0;
-            if (new_idx == m_next_read)
-                throw std::out_of_range("push: CircularBuffer is full");
+
+            if (new_idx == m_next_read && size() > 0)
+            {
+                std::cerr << "Warning: CircularBuffer is full, overwriting old data." << std::endl;
+                m_next_read = (m_next_read + 1) % m_size;
+            }
+                
+                //throw std::out_of_range("push: CircularBuffer is full");
             m_data[m_next_write] = d;
             m_next_write = new_idx;
         }
