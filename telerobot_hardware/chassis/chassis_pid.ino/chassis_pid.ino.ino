@@ -18,6 +18,7 @@ SPDMotor motorRR( 2, A1, true, 5, A4, A5); // <- NOTE: Motor Dir pins reversed f
 ServoSmooth headRotateServo;
 ServoSmooth headPitchServo;
 
+
 const float defaultCharge = 12.7;
 
 const int middleArifmPower = 100;  
@@ -81,62 +82,69 @@ void setup()
   delay(50);
 }
 
+unsigned long lastModbusTime = 0;
+const unsigned long modbusInterval = 20;
+
 void loop() { 
-
-  float lf_sig = motorLF.Job();
-  float rf_sig = motorRF.Job();
-  float lr_sig = motorLR.Job();
-  float rr_sig = motorRR.Job();
-
-  long LFpos = lf_sig * 1000000;
-  regBank.set(30001, (word) (LFpos / 32768) );
-  regBank.set(30002, (word) (LFpos % 32768) );
-  
-  long RFpos = rf_sig * 1000000;
-  regBank.set(30003, (word) (RFpos / 32768) );
-  regBank.set(30004, (word) (RFpos % 32768) );
-  
-  long LRpos = lr_sig * 1000000;
-  regBank.set(30005, (word) (LRpos / 32768) );
-  regBank.set(30006, (word) (LRpos % 32768) );
-  
-  long RRpos = rr_sig * 1000000;
-  regBank.set(30007, (word) (RRpos / 32768) );
-  regBank.set(30008, (word) (RRpos % 32768) );
-  //test
-  int data = analogRead(A0);  
-
-  float dataNew = (0.0230483271375*midArifm2(data));
-  float chargePercentageProcess;
-
-  if(dataNew > 12.7)
-  {
-    chargePercentageProcess = 100;  
-  }
-  else if(dataNew < 11.5)
-  {
-    chargePercentageProcess = 0.0;
-  }
-  else
-  {
-    chargePercentageProcess = ((dataNew - 11.7)/(defaultCharge - 11.7))*100;
-  }
-  
-  regBank.set(30009, (dataNew*100));
-  regBank.set(30010, (chargePercentageProcess*100));
-
-  // Set data
-  motorLF.setTarget((int16_t)(regBank.get(40001)-3000)/100.f);
-  motorRF.setTarget((int16_t)(regBank.get(40002)-3000)/100.f);
-  motorLR.setTarget((int16_t)(regBank.get(40003)-3000)/100.f);
-  motorRR.setTarget((int16_t)(regBank.get(40004)-3000)/100.f);
 
   headRotateServo.tick();
   headPitchServo.tick();
+
   headPitchServo.setTargetDeg((word) regBank.get(40005) + 90);
   headRotateServo.setTargetDeg((word)regBank.get(40006) + 90);
 
-  slave.run();
+  if (millis() - lastModbusTime >= modbusInterval) {
+    lastModbusTime = millis();
 
-  delay(50);
+    float lf_sig = motorLF.Job();
+    float rf_sig = motorRF.Job();
+    float lr_sig = motorLR.Job();
+    float rr_sig = motorRR.Job();
+
+    long LFpos = lf_sig * 1000000;
+    regBank.set(30001, (word) (LFpos / 32768) );
+    regBank.set(30002, (word) (LFpos % 32768) );
+    
+    long RFpos = rf_sig * 1000000;
+    regBank.set(30003, (word) (RFpos / 32768) );
+    regBank.set(30004, (word) (RFpos % 32768) );
+    
+    long LRpos = lr_sig * 1000000;
+    regBank.set(30005, (word) (LRpos / 32768) );
+    regBank.set(30006, (word) (LRpos % 32768) );
+    
+    long RRpos = rr_sig * 1000000;
+    regBank.set(30007, (word) (RRpos / 32768) );
+    regBank.set(30008, (word) (RRpos % 32768) );
+    //test
+    // int data = analogRead(A0);  
+
+    // float dataNew = (0.0230483271375*midArifm2(data));
+    // float chargePercentageProcess;
+
+    // if(dataNew > 12.7)
+    // {
+    //   chargePercentageProcess = 100;  
+    // }
+    // else if(dataNew < 11.5)
+    // {
+    //   chargePercentageProcess = 0.0;
+    // }
+    // else
+    // {
+    //   chargePercentageProcess = ((dataNew - 11.7)/(defaultCharge - 11.7))*100;
+    // }
+    
+    // regBank.set(30009, (dataNew*100));
+    // regBank.set(30010, (chargePercentageProcess*100));
+
+    // Set data
+    motorLF.setTarget((int16_t)(regBank.get(40001)-3000)/100.f);
+    motorRF.setTarget((int16_t)(regBank.get(40002)-3000)/100.f);
+    motorLR.setTarget((int16_t)(regBank.get(40003)-3000)/100.f);
+    motorRR.setTarget((int16_t)(regBank.get(40004)-3000)/100.f);
+
+    // delay(50);
+  }
+  slave.run();
 }
